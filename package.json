@@ -1,16 +1,16 @@
 {
   "name": "service-path",
   "version": "0.1.0",
-  "description": "",
+  "description": "A library for traversing optimal service paths in a service registry",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/JorisCoppieters/service-path.git"
   },
-  "author": "",
+  "author": "Joris Coppieters",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/JorisCoppieters/service-path/issues"
