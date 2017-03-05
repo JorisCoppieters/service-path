@@ -48,8 +48,8 @@ function main () {
   servicePath.setup({
     log_level: (verbose ? servicePath.k_LOG_LEVEL_VERBOSE : (info? servicePath.k_LOG_LEVEL_INFO : false)),
     log_single_line: !multi_line,
-    service_registry: require('./service_registry.json'),
-    service_functions: require('./service_functions'),
+    service_registry: require('./service_registry/service_registry.json'),
+    service_functions: require('./service_registry/service_functions'),
   });
 
   printSuggestions(keywords, imageFile, categoryId, title);
