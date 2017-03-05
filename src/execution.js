@@ -19,6 +19,7 @@ let request = require('request');
 
 let log = require('./log');
 let paths = require('./paths');
+let print = require('./print');
 let registry = require('./registry');
 let timer = require('./timer');
 let utils = require('./utils');
@@ -62,6 +63,7 @@ function getAndExecuteServicePath (in_inputs, in_outputType) {
 function executeServicePath (in_servicePath, in_inputs) {
   let allData = clone(_cleanInputs(in_inputs));
   return _executeServicePathNode(in_servicePath.reverse(), allData).then(() => {
+    print.clearLine();
     return Promise.resolve(allData);
   });
 }

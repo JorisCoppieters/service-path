@@ -13,16 +13,9 @@
 // ******************************
 
 let minimist = require('minimist');
-let Promise = require('bluebird');
 let cprint = require('color-print');
 
 let servicePath = require('./index');
-
-let execution = require('./src/execution');
-let log = require('./src/log');
-let print = require('./src/print');
-let printInfo = require('./src/printInfo');
-let utils = require('./src/utils');
 
 // ******************************
 // Script Args:
@@ -53,7 +46,7 @@ main();
 
 function main () {
   servicePath.setup({
-    log_level: (verbose ? log.k_LOG_LEVEL_VERBOSE : (info? log.k_LOG_LEVEL_INFO : false)),
+    log_level: (verbose ? servicePath.k_LOG_LEVEL_VERBOSE : (info? servicePath.k_LOG_LEVEL_INFO : false)),
     log_single_line: !multi_line,
     service_registry: require('./service_registry.json'),
     service_functions: require('./service_functions'),
@@ -67,7 +60,7 @@ function main () {
 function printSuggestions (in_keywords, in_imageFile, in_categoryId, in_title) {
   output = output || 'listing_title';
 
-  utils.runGenerator(function* () {
+  _runGenerator(function* () {
 
     let inputs = {
       keywords: in_keywords,
@@ -78,14 +71,12 @@ function printSuggestions (in_keywords, in_imageFile, in_categoryId, in_title) {
       is_new: 1,
     };
 
-    let sellSuggestions = yield execution.getAndExecuteServicePath(inputs, output);
-    let suggestions = utils.getProperty(sellSuggestions, output);
+    let sellSuggestions = yield servicePath.getAndExecuteServicePath(inputs, output);
+    let suggestions = servicePath.getProperty(sellSuggestions, output);
     if (!suggestions) {
       printStats();
       return;
     }
-
-    print.clearLine();
 
     if (typeof(suggestions) === 'object') {
       let suggestionKey;
@@ -95,18 +86,18 @@ function printSuggestions (in_keywords, in_imageFile, in_categoryId, in_title) {
       let first = true;
 
       Object.keys(suggestions).forEach((suggestionKey) => {
-        suggestionValues = utils.getValue(suggestions[suggestionKey]);
+        suggestionValues = servicePath.getValue(suggestions[suggestionKey]);
         if (!suggestionValues) {
           return;
         }
 
         if (!first) {
-          print.out('\n');
+          console.log();
         } else {
           first = false;
         }
 
-        print.out(cprint.toMagenta('-- ' + suggestionKey + ' --') + '\n');
+        console.log(cprint.toMagenta('-- ' + suggestionKey + ' --'));
 
         if (Array.isArray(suggestionValues)) {
           suggestionValues.forEach((suggestionValue) => {
@@ -118,15 +109,15 @@ function printSuggestions (in_keywords, in_imageFile, in_categoryId, in_title) {
               value = UTIL_FUNCTIONS.colour_to_string(value);
             }
 
-            print.out(cprint.toWhite('-') + ' ' + cprint.toCyan(value) + ' ' + cprint.toYellow('(' + (suggestionValue.confidence || 1) + ')') + '\n');
+            console.log(cprint.toWhite('-') + ' ' + cprint.toCyan(value) + ' ' + cprint.toYellow('(' + (suggestionValue.confidence || 1) + ')'));
           });
         } else {
-            print.out(cprint.toWhite('-') + ' ' + cprint.toCyan(suggestionValues) + '\n');
+            console.log(cprint.toWhite('-') + ' ' + cprint.toCyan(suggestionValues));
         }
       });
     } else if (typeof(suggestions) === 'string') {
-      print.out(cprint.toMagenta('-- ' + output + ' --') + '\n');
-      print.out(cprint.toWhite('-') + ' ' + cprint.toCyan(suggestions) + '\n');
+      console.log(cprint.toMagenta('-- ' + output + ' --'));
+      console.log(cprint.toWhite('-') + ' ' + cprint.toCyan(suggestions));
     }
 
     printStats();
@@ -137,12 +128,38 @@ function printSuggestions (in_keywords, in_imageFile, in_categoryId, in_title) {
 
 function printStats () {
   if (stats) {
-    printInfo.serviceStats();
+    servicePath.printServiceStats();
   }
 
   if (paths) {
-    printInfo.servicePathsUsed();
+    servicePath.printServicePathsUsed();
   }
+}
+
+// ******************************
+
+function _runGenerator (generatorFunction) {
+  let next = function (err, arg) {
+    if (err) return it.throw(err);
+
+    let result = it.next(arg);
+    if (result.done) return;
+
+    if (result.value && result.value.then) {
+      result.value
+      .then((resolveResult) => {
+        next(null, resolveResult);
+      })
+      .catch((rejectResult) => {
+        next(rejectResult, null);
+      });
+    } else {
+      next(null, result.value);
+    }
+  }
+
+  let it = generatorFunction();
+  return next();
 }
 
 // ******************************

@@ -110,13 +110,14 @@ module.exports['k_LOG_LEVEL_ERROR'] = k_LOG_LEVEL_ERROR;
 module.exports['k_LOG_LEVEL_WARNING'] = k_LOG_LEVEL_WARNING;
 module.exports['k_LOG_LEVEL_INFO'] = k_LOG_LEVEL_INFO;
 module.exports['k_LOG_LEVEL_VERBOSE'] = k_LOG_LEVEL_VERBOSE;
+
 module.exports['error'] = logError;
-module.exports['warning'] = logWarning;
 module.exports['info'] = logInfo;
-module.exports['verbose'] = logVerbose;
-module.exports['setLogLevel'] = setLogLevel;
 module.exports['logLevel'] = getLogLevel;
-module.exports['setLogSingleLine'] = setLogSingleLine;
 module.exports['logSingleLine'] = getLogSingleLine;
+module.exports['setLogLevel'] = setLogLevel;
+module.exports['setLogSingleLine'] = setLogSingleLine;
+module.exports['verbose'] = logVerbose;
+module.exports['warning'] = logWarning;
 
 // ******************************
