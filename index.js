@@ -19,8 +19,10 @@ let registry = require('./src/registry');
 let utils = require('./src/utils');
 
 // ******************************
-// Globals:
+// Constants:
 // ******************************
+
+const k_VERSION = '0.1.0';
 
 // ******************************
 // Functions:
