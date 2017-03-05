@@ -60,10 +60,13 @@ function toArray (in_value) {
 
 // ******************************
 
-function inputsToString (in_inputs) {
+function keyValToString (in_inputs) {
   let val;
   let keyVals = Object.keys(in_inputs).map((key) => {
     val = in_inputs[key];
+    if (val.length > 100) {
+      val = val.substr(0, 100) + '...';
+    }
     return key + '=>' + val;
   });
   return keyVals.join(',');
@@ -131,7 +134,7 @@ module.exports['arrayContainedIn'] = arrayContainedIn;
 module.exports['getProperty'] = getProperty;
 module.exports['getValue'] = getValue;
 module.exports['getResponseKeyBody'] = getResponseKeyBody;
-module.exports['inputsToString'] = inputsToString;
+module.exports['keyValToString'] = keyValToString;
 module.exports['runGenerator'] = runGenerator;
 module.exports['setRequestData'] = setRequestData;
 module.exports['toArray'] = toArray;

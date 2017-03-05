@@ -12,14 +12,16 @@
 // Requires:
 // ******************************
 
+let clone = require('clone');
+let Promise = require('bluebird');
 let qs = require('querystring');
 let request = require('request');
-let Promise = require('bluebird');
 
 let log = require('./log');
+let paths = require('./paths');
 let registry = require('./registry');
-let utils = require('./utils');
 let timer = require('./timer');
+let utils = require('./utils');
 
 // ******************************
 // Globals:
@@ -31,8 +33,34 @@ let g_CURRENT_REQUESTS = {};
 // Functions:
 // ******************************
 
+function getAndExecuteServicePath (in_inputs, in_outputType) {
+  return new Promise((resolve, reject) => {
+    utils.runGenerator(function* () {
+      try {
+        let inputs = _cleanInputs(in_inputs);
+        let servicePath = yield paths.getServicePath(Object.keys(inputs), in_outputType);
+        let result = yield executeServicePath(servicePath, inputs);
+
+        let tryCount = 0;
+        while (tryCount++ < 3 && !result[in_outputType]) {
+          log.warning('Trying again...');
+          inputs = _cleanInputs(in_inputs);
+          servicePath = yield paths.getServicePath(Object.keys(inputs), in_outputType);
+          result = yield executeServicePath(servicePath, inputs);
+        }
+
+        resolve(result);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  });
+}
+
+// ******************************
+
 function executeServicePath (in_servicePath, in_inputs) {
-  let allData = in_inputs;
+  let allData = clone(_cleanInputs(in_inputs));
   return _executeServicePathNode(in_servicePath.reverse(), allData).then(() => {
     return Promise.resolve(allData);
   });
@@ -61,43 +89,51 @@ function _executeServicePathNode (in_servicePath, in_availableInputs) {
 
     delete servicePath[servicePathKey];
 
-    servicePathNodeRequests.push(new Promise((resolve, reject) => {
-      _executeService(servicePathNode, availableInputs).then((output) => {
-        if (!output) {
-          return resolve();
-        }
-
-        let serviceName = utils.getProperty(servicePathNode, 'name');
-        let servicePathNodeKey = utils.getProperty(servicePathNode, 'key');
-
-        let outputType = Object.keys(output)[0];
-        let outputValue = output[outputType];
-
-        if (!availableInputs[outputType] && outputValue) {
-          availableInputs[outputType] = outputValue;
-        }
-
-        let error = utils.getProperty(outputValue, 'error', false);
-        let warning = utils.getProperty(outputValue, 'warning', false);
-
-        if (error) {
-          log.error(serviceName + ': ' + error);
-          registry.disableService(servicePathNodeKey);
-          return resolve();
-        }
-
-        if (warning) {
-          log.warning(serviceName + ': ' + warning);
-          disableService(servicePathNodeKey);
-          return resolve();
-        }
-
-        return _executeServicePathNode(servicePath, availableInputs, output).then(resolve).catch(reject);
-      }).catch(reject);
-    }));
+    servicePathNodeRequests.push(_executeServiceAndPopulateInputs(servicePath, servicePathNode, availableInputs));
   });
 
   return Promise.all(servicePathNodeRequests);
+}
+
+// ******************************
+
+function _executeServiceAndPopulateInputs (in_servicePath, in_servicePathNode, in_availableInputs) {
+  let servicePath = in_servicePath;
+  let servicePathNode = in_servicePathNode;
+  let availableInputs = in_availableInputs;
+
+  return new Promise((resolve, reject) => {
+    _executeService(servicePathNode, availableInputs).then((outputValue) => {
+      if (!outputValue) {
+        return resolve();
+      }
+
+      let serviceName = utils.getProperty(servicePathNode, 'name');
+      let servicePathNodeKey = utils.getProperty(servicePathNode, 'key');
+      let serviceOutputType = utils.getProperty(servicePathNode, 'output');
+
+      if (!availableInputs[serviceOutputType] && outputValue) {
+        availableInputs[serviceOutputType] = outputValue;
+      }
+
+      let error = utils.getProperty(outputValue, 'error', false);
+      let warning = utils.getProperty(outputValue, 'warning', false);
+
+      if (error) {
+        log.error(serviceName + ': ' + error);
+        registry.disableService(servicePathNodeKey);
+        return resolve();
+      }
+
+      if (warning) {
+        log.warning(serviceName + ': ' + warning);
+        registry.disableService(servicePathNodeKey);
+        return resolve();
+      }
+
+      return _executeServicePathNode(servicePath, availableInputs).then(resolve).catch(reject);
+    }).catch(reject);
+  });
 }
 
 // ******************************
@@ -128,7 +164,7 @@ function _executeNetworkService (in_service, in_inputs) {
 
   log.info('Executing Network Service: ' + serviceName);
 
-  let currentRequestKey = serviceAddress + ':' + utils.inputsToString(in_inputs);
+  let currentRequestKey = serviceAddress + ':' + utils.keyValToString(in_inputs);
   if (g_CURRENT_REQUESTS[currentRequestKey] !== undefined && g_CURRENT_REQUESTS[currentRequestKey].then) {
     return g_CURRENT_REQUESTS[currentRequestKey];
   }
@@ -243,23 +279,26 @@ function _executeNetworkService (in_service, in_inputs) {
     timer.start(serviceAddress);
 
     request(requestOptions, (error, response, body) => {
+      log.verbose('Request Data: ' + utils.keyValToString(requestData));
+      log.verbose('Request Options: ' + utils.keyValToString(requestOptions));
+
       if (error) {
-        log.error(serviceAddress + ' Error:' + error);
         registry.addServiceStats({ service_key: serviceAddress, error, request_options: requestOptions, response_time: timer.stop(serviceAddress) });
-        result[serviceOutputType] = { error };
+        result = { error };
       } else if (serviceResponseKey) {
         let serviceResponseBody = utils.getResponseKeyBody(body, serviceResponseKey);
         if (!serviceResponseBody) {
-          log.error(serviceAddress + ' Error:' + body);
           registry.addServiceStats({ service_key: serviceAddress, error: body, request_options: requestOptions, response_time: timer.stop(serviceAddress) });
-          result[serviceOutputType] = { error: body };
+          result = { error: body };
         } else {
+          log.verbose('Response: ' + utils.keyValToString(serviceResponseBody));
           registry.addServiceStats({ service_key: serviceAddress, request_options: requestOptions, response_time: timer.stop(serviceAddress) });
-          result[serviceOutputType] = serviceResponseBody;
+          result = serviceResponseBody;
         }
       } else {
+        log.verbose('Response: ' + utils.keyValToString(body));
         registry.addServiceStats({ service_key: serviceAddress, request_options: requestOptions, response_time: timer.stop(serviceAddress) });
-        result[serviceOutputType] = body;
+        result = body;
       }
 
       timer.clear(serviceAddress);
@@ -305,15 +344,30 @@ function _executeFunctionService (in_service, in_inputs) {
     timer.clear(serviceFunctionName);
 
     let result = {};
-    result[serviceOutputType] = serviceFunctionResult;
+    result = serviceFunctionResult;
     resolve(result);
   });
+}
+
+// ******************************
+
+function _cleanInputs (in_inputs) {
+  let cleanInputs = {};
+  Object.keys(in_inputs).forEach((inputKey) => {
+    if (in_inputs[inputKey] === undefined) {
+      return;
+    }
+    cleanInputs[inputKey] = in_inputs[inputKey];
+  });
+
+  return cleanInputs;
 }
 
 // ******************************
 // Exports:
 // ******************************
 
+module.exports['getAndExecuteServicePath'] = getAndExecuteServicePath;
 module.exports['executeServicePath'] = executeServicePath;
 
 // ******************************

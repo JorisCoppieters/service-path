@@ -3,10 +3,8 @@
 // ******************************
 //
 //
-// SERVICE PATH v0.1.0
+// TEST
 //
-// 0.1.0
-// - Initial release
 //
 // ******************************
 
@@ -18,9 +16,12 @@ let minimist = require('minimist');
 let Promise = require('bluebird');
 let cprint = require('color-print');
 
+let servicePath = require('./index');
+
+let execution = require('./src/execution');
 let log = require('./src/log');
 let print = require('./src/print');
-let servicePath = require('./index');
+let printInfo = require('./src/printInfo');
 let utils = require('./src/utils');
 
 // ******************************
@@ -38,6 +39,7 @@ let info = _ARGV['info'];
 let stats = _ARGV['stats'];
 let paths = _ARGV['paths'];
 let multi_line = _ARGV['multi-line'];
+let output = _ARGV['output'];
 
 // ******************************
 // Script:
@@ -63,9 +65,21 @@ function main () {
 // ******************************
 
 function printSuggestions (in_keywords, in_imageFile, in_categoryId, in_title) {
+  output = output || 'listing_title';
+
   utils.runGenerator(function* () {
-    let sellSuggestions = yield getSuggestions(in_keywords, in_imageFile, in_categoryId, in_title);
-    let suggestions = utils.getProperty(sellSuggestions, 'sell_suggestions');
+
+    let inputs = {
+      keywords: in_keywords,
+      image_file: in_imageFile,
+      category_id: in_categoryId,
+      title: in_title,
+      suburb_id: 1,
+      is_new: 1,
+    };
+
+    let sellSuggestions = yield execution.getAndExecuteServicePath(inputs, output);
+    let suggestions = utils.getProperty(sellSuggestions, output);
     if (!suggestions) {
       printStats();
       return;
@@ -73,42 +87,47 @@ function printSuggestions (in_keywords, in_imageFile, in_categoryId, in_title) {
 
     print.clearLine();
 
-    let suggestionKey;
-    let suggestionValues;
-    let suggestionValue;
-    let value;
-    let first = true;
+    if (typeof(suggestions) === 'object') {
+      let suggestionKey;
+      let suggestionValues;
+      let suggestionValue;
+      let value;
+      let first = true;
 
-    Object.keys(suggestions).forEach((suggestionKey) => {
-      suggestionValues = utils.getValue(suggestions[suggestionKey]);
-      if (!suggestionValues) {
-        return;
-      }
+      Object.keys(suggestions).forEach((suggestionKey) => {
+        suggestionValues = utils.getValue(suggestions[suggestionKey]);
+        if (!suggestionValues) {
+          return;
+        }
 
-      if (!first) {
-        print.out('\n');
-      } else {
-        first = false;
-      }
+        if (!first) {
+          print.out('\n');
+        } else {
+          first = false;
+        }
 
-      print.out(cprint.toMagenta('-- ' + suggestionKey + ' --') + '\n');
+        print.out(cprint.toMagenta('-- ' + suggestionKey + ' --') + '\n');
 
-      if (Array.isArray(suggestionValues)) {
-        suggestionValues.forEach((suggestionValue) => {
+        if (Array.isArray(suggestionValues)) {
+          suggestionValues.forEach((suggestionValue) => {
 
-          value = suggestionValue.value;
-          if (typeof(value) === 'string') {
-            value = value.trim();
-          } else if (Array.isArray(value) && value.length === 3) {
-            value = UTIL_FUNCTIONS.colour_to_string(value);
-          }
+            value = suggestionValue.value;
+            if (typeof(value) === 'string') {
+              value = value.trim();
+            } else if (Array.isArray(value) && value.length === 3) {
+              value = UTIL_FUNCTIONS.colour_to_string(value);
+            }
 
-          print.out(cprint.toWhite('-') + ' ' + cprint.toCyan(value) + ' ' + cprint.toYellow('(' + (suggestionValue.confidence || 1) + ')') + '\n');
-        });
-      } else {
-          print.out(cprint.toWhite('-') + ' ' + cprint.toCyan(suggestionValues) + '\n');
-      }
-    });
+            print.out(cprint.toWhite('-') + ' ' + cprint.toCyan(value) + ' ' + cprint.toYellow('(' + (suggestionValue.confidence || 1) + ')') + '\n');
+          });
+        } else {
+            print.out(cprint.toWhite('-') + ' ' + cprint.toCyan(suggestionValues) + '\n');
+        }
+      });
+    } else if (typeof(suggestions) === 'string') {
+      print.out(cprint.toMagenta('-- ' + output + ' --') + '\n');
+      print.out(cprint.toWhite('-') + ' ' + cprint.toCyan(suggestions) + '\n');
+    }
 
     printStats();
   });
@@ -118,44 +137,12 @@ function printSuggestions (in_keywords, in_imageFile, in_categoryId, in_title) {
 
 function printStats () {
   if (stats) {
-    servicePath.printServiceStats();
+    printInfo.serviceStats();
   }
 
   if (paths) {
-    servicePath.printServicePathsUsed();
+    printInfo.servicePathsUsed();
   }
-}
-
-// ******************************
-
-function getSuggestions (in_keywords, in_imageFile, in_categoryId, in_title) {
-  return new Promise((resolve) => {
-    utils.runGenerator(function* () {
-      let inputs = {};
-
-      if (in_keywords) {
-        inputs['keywords'] = in_keywords;
-      }
-
-      if (in_imageFile) {
-        inputs['image_file'] = in_imageFile;
-      }
-
-      if (in_categoryId) {
-        inputs['category_id'] = in_categoryId;
-      }
-
-      if (in_title) {
-        inputs['title'] = in_title;
-      }
-
-      inputs['suburb_id'] = 1;
-      inputs['is_new'] = 1;
-
-      let suggestions = yield servicePath.getAndExecuteServicePath(inputs, 'sell_suggestions');
-      return resolve(suggestions);
-    });
-  });
 }
 
 // ******************************

@@ -12,10 +12,12 @@
 // Requires:
 // ******************************
 
-let Promise = require('bluebird');
 let clone = require('clone');
-let utils = require('./utils');
+let Promise = require('bluebird');
+let request = require('request');
+
 let log = require('./log');
+let utils = require('./utils');
 
 // ******************************
 // Globals:
@@ -142,7 +144,7 @@ function _getServiceName (in_service) {
 function _matchService (in_service, in_inputTypes, in_outputType) {
   let fn = '_matchService';
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
 
     if (!utils.getProperty(in_service, 'enabled', true)) {
       resolve(false);
@@ -207,16 +209,17 @@ function _matchNetworkService (in_service) {
       return resolve(false);
     }
 
-    _canConnect(in_service).then(() => {
-      resolve(in_service);
-      g_CAN_CONNECT[serviceAddress] = true;
-
-    }).catch((err) => {
+    _canConnect(in_service).then((canConnect) => {
+      if (canConnect) {
+        resolve(in_service);
+        g_CAN_CONNECT[serviceAddress] = true;
+      } else {
+        g_CAN_CONNECT[serviceAddress] = false;
+        log.warning('Cannot connect to: ' + utils.getProperty(in_service, 'name') + ' (' + serviceAddress + ')');
+        addServiceStats({ service_key: serviceAddress, warning: 'Cannot connect' });
+      }
       resolve(false);
-      g_CAN_CONNECT[serviceAddress] = false;
-      log.warning('Cannot connect to: ' + utils.getProperty(in_service, 'name') + ' (' + serviceAddress + ')');
-      addServiceStats({ service_key: serviceAddress, warning: 'Cannot connect' });
-    });
+    }).catch(reject);
   });
 }
 
@@ -261,29 +264,29 @@ function _canConnect (in_service) {
 
   let responseData = {};
 
-  let promise = new Promise((resolve, reject) => {
+  let promise = new Promise((resolve) => {
     request(requestOptions, (error, response, body) => {
       delete g_CURRENT_REQUESTS[serviceAddress];
 
       if (error) {
-        return reject(error);
+        return resolve(false);
       }
 
       try {
         responseData = JSON.parse(body);
       } catch (error) {
-        return reject(error);
+        return resolve(false);
       }
 
       if (['ready', 'ok'].indexOf(responseData.status) >= 0) {
-        return resolve('ready');
+        return resolve(true);
       }
 
       if ((responseData.processes || 0) < (responseData.cpu_count || 0)) {
-        return resolve('ready');
+        return resolve(true);
       }
 
-      return reject('not ready');
+      return resolve(false);
     });
   });
 
