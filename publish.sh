@@ -28,6 +28,7 @@ if [[ `ask "Do you want to publish $VERSION?" && echo true` == true ]]; then
   echo "Running npm publish..."
   npm publish
   echo "Tagging revision..."
+  git commit -m "Set version to $VERSION"
   git tag -a v$VERSION -m "Published v$VERSION"
   git push origin v$VERSION
 else
