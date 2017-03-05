@@ -1,0 +1,237 @@
+'use strict'; // JS: ES6
+
+// ******************************
+//
+//
+// PATHS
+//
+//
+// ******************************
+
+// ******************************
+// Requires:
+// ******************************
+
+let Promise = require('bluebird');
+
+let log = require('./log');
+let registry = require('./registry');
+let utils = require('./utils');
+
+// ******************************
+// Globals:
+// ******************************
+
+let g_SERVICE_PATHS_USED = {};
+
+// ******************************
+// Functions:
+// ******************************
+
+function getServicePath (in_inputTypes, in_outputType) {
+  log.info('Getting service path for "' + in_inputTypes.join('+') + '":"' + in_outputType + '"...');
+
+  let distances = [];
+  in_inputTypes.forEach((inputType) => {
+    distances[inputType] = 0;
+  });
+
+  let serviceDistanceInfo = {
+    availableInputs: in_inputTypes.slice(),
+    distances,
+    bestServices: [],
+    seen: [],
+    newInputs: true
+  };
+
+  return new Promise((resolve, reject) => {
+    _getServicePathForMinDistance(serviceDistanceInfo).then(() => {
+      let bestServices = serviceDistanceInfo.bestServices;
+
+      if (bestServices[in_outputType] === undefined) {
+        resolve([]);
+        return;
+      }
+
+      log.verbose('  Building path...');
+
+      let servicePath = [];
+      let typeStack = [in_outputType];
+      let newInputs = true;
+
+      while (typeStack.length) {
+        let outputType = typeStack.pop();
+        if (in_inputTypes.indexOf(outputType) >= 0) {
+          continue;
+        }
+
+        if (outputType.match(/\?$/)) {
+          continue;
+        }
+
+        let outputService = bestServices[outputType];
+        if (!outputService) {
+          log.warning('Not best service for: ' + outputType);
+          break;
+        }
+
+        let serviceInputTypes = utils.toArray(utils.getProperty(outputService, 'input', []));
+
+        if (servicePath.indexOf(outputService) >= 0) {
+          delete servicePath[servicePath.indexOf(outputService)];
+        }
+
+        servicePath.push(outputService);
+        typeStack = typeStack.concat(serviceInputTypes);
+        newInputs = true;
+      }
+
+      let distances = serviceDistanceInfo.distances;
+      let distance;
+      log.verbose('Distances: [\n    ' + Object.keys(distances).map((key) => { distance = distances[key]; return key + ' => ' + distance }).join('\n    ') + '\n]');
+
+      servicePath = servicePath.filter((servicePathNode) => { return !!servicePath } );
+      servicePath.reverse();
+
+      log.verbose('Service Path [\n    ' + servicePath.map((servicePath) => { return utils.getProperty(servicePath, 'name', ''); }).join('\n    ') + '\n]');
+
+      resolve(servicePath);
+      _addServicePathUsed(in_outputType, servicePath);
+    }).catch(reject);
+  });
+}
+
+// ******************************
+
+function _getServicePathForMinDistance (in_serviceDistanceInfo) {
+  if (in_serviceDistanceInfo.newInputs) {
+    in_serviceDistanceInfo.newInputs = false;
+
+    let distances = in_serviceDistanceInfo.distances;
+    let distance;
+    log.verbose('Distances: [\n    ' + Object.keys(distances).map((key) => { distance = distances[key]; return key + ' => ' + distance }).join('\n    ') + '\n]');
+
+    return _calculateServiceDistances(in_serviceDistanceInfo).then(_getServicePathForMinDistance);
+  }
+
+  return Promise.resolve(in_serviceDistanceInfo);
+}
+
+// ******************************
+
+function _calculateServiceDistances (in_serviceDistanceInfo) {
+  let availableInputs = in_serviceDistanceInfo.availableInputs;
+  let distances = in_serviceDistanceInfo.distances;
+  let bestServices = in_serviceDistanceInfo.bestServices;
+  let seen = in_serviceDistanceInfo.seen;
+
+  return new Promise((resolve, reject) => {
+    registry.getServices(availableInputs).then((servicesWithInput) => {
+      let serviceName;
+      let serviceInputTypes;
+      let serviceInputType;
+      let serviceOutputType;
+      let serviceDistance;
+      let bestDistance;
+      let altDistance;
+
+      servicesWithInput.forEach((serviceWithInput) => {
+        serviceOutputType = utils.getProperty(serviceWithInput, 'output');
+        if (availableInputs.indexOf(serviceOutputType) < 0) {
+          availableInputs.push(serviceOutputType);
+          in_serviceDistanceInfo.newInputs = true;
+        }
+      });
+
+      servicesWithInput.forEach((serviceWithInput) => {
+        serviceName = utils.getProperty(serviceWithInput, 'name');
+        serviceInputTypes = utils.toArray(utils.getProperty(serviceWithInput, 'input', []));
+        serviceOutputType = utils.getProperty(serviceWithInput, 'output');
+
+        if (seen[serviceName]) {
+          return;
+        }
+
+        seen[serviceName] = true;
+
+        if (availableInputs.indexOf(serviceOutputType) < 0) {
+          availableInputs.push(serviceOutputType);
+          in_serviceDistanceInfo.newInputs = true;
+        }
+
+        serviceDistance = _getServiceDistance(serviceWithInput);
+        bestDistance = distances[serviceOutputType];
+        bestDistance = (bestDistance === undefined) ? NaN : bestDistance;
+        altDistance = parseInt(serviceDistance);
+
+        if (!in_serviceDistanceInfo.newInputs) {
+          serviceInputTypes = serviceInputTypes.map((serviceInputType) => {
+            if (!serviceInputType.match(/\?$/)) {
+              return serviceInputType;
+            }
+            serviceInputType = serviceInputType.replace(/\?$/,'');
+            return (distances[serviceInputType] !== undefined ? serviceInputType : null);
+          }).filter((serviceInputType) => {
+            return !!serviceInputType;
+          });
+
+          serviceWithInput['input'] = serviceInputTypes;
+        }
+
+        serviceInputTypes.forEach((serviceInputType) => {
+          if (serviceInputType.match(/\?$/)) {
+            seen[serviceName] = false;
+          }
+
+          altDistance += distances[serviceInputType];
+        });
+
+        log.verbose('  Found neighbour "' + serviceInputTypes.join('+') + '":"' + serviceOutputType + '" => ' + altDistance );
+
+        if (!isNaN(altDistance) && (isNaN(bestDistance) || altDistance < bestDistance)) {
+          distances[serviceOutputType] = altDistance;
+          bestServices[serviceOutputType] = serviceWithInput;
+
+          log.verbose('  Best distance so far "' + serviceOutputType + '" => ' + altDistance + ' < ' + bestDistance);
+        }
+      });
+
+      resolve(in_serviceDistanceInfo);
+    }).catch(reject);
+  });
+}
+
+// ******************************
+
+function _getServiceDistance (in_service) {
+  let serviceAccuracy = utils.getProperty(in_service, 'accuracy', 0);
+  let serviceLatency = utils.getProperty(in_service, 'latency', 0);
+  return (100 - serviceAccuracy) + serviceLatency + 1;
+}
+
+// ******************************
+
+function getServicePathsUsed () {
+  return g_SERVICE_PATHS_USED;
+}
+
+// ******************************
+
+function _clearServicePathsUsed () {
+  g_SERVICE_PATHS_USED = {};
+}
+
+// ******************************
+
+function _addServicePathUsed (in_outputType, in_servicePath) {
+  g_SERVICE_PATHS_USED[in_outputType] = in_servicePath.map((servicePathNode) => { return servicePathNode.name; });
+}
+
+// ******************************
+// Exports:
+// ******************************
+
+module.exports['getServicePath'] = getServicePath;
+module.exports['getServicePathsUsed'] = getServicePathsUsed;
+
+// ******************************
