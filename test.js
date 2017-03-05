@@ -98,22 +98,7 @@ function printSuggestions (in_keywords, in_imageFile, in_categoryId, in_title) {
         }
 
         console.log(cprint.toMagenta('-- ' + suggestionKey + ' --'));
-
-        if (Array.isArray(suggestionValues)) {
-          suggestionValues.forEach((suggestionValue) => {
-
-            value = suggestionValue.value;
-            if (typeof(value) === 'string') {
-              value = value.trim();
-            } else if (Array.isArray(value) && value.length === 3) {
-              value = UTIL_FUNCTIONS.colour_to_string(value);
-            }
-
-            console.log(cprint.toWhite('-') + ' ' + cprint.toCyan(value) + ' ' + cprint.toYellow('(' + (suggestionValue.confidence || 1) + ')'));
-          });
-        } else {
-            console.log(cprint.toWhite('-') + ' ' + cprint.toCyan(suggestionValues));
-        }
+        console.log(cprint.toWhite('-') + ' ' + cprint.toCyan(suggestionValues));
       });
     } else if (typeof(suggestions) === 'string') {
       console.log(cprint.toMagenta('-- ' + output + ' --'));
