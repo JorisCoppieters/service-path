@@ -27,7 +27,6 @@ function printServiceStats () {
   print.out('\n' + cprint.toMagenta('-- ' + 'Service Stats' + ' --') + '\n');
 
   let service;
-  let serviceKey;
   let serviceName;
   let serviceType;
   let serviceTypeShort;
@@ -38,7 +37,7 @@ function printServiceStats () {
 
   let serviceStats = _sortServiceStats(registry.getServiceStats());
   serviceStats.forEach((serviceStats) => {
-    serviceKey = utils.getProperty(serviceStats, 'service_key', false);
+    let serviceKey = utils.getProperty(serviceStats, 'service_key', false);
     service = registry.getService(serviceKey);
     if (!service) {
       return;
