@@ -204,7 +204,6 @@ function _executeNetworkService (in_service, in_inputs) {
     }
 
     let inputValue;
-    let inputsValid = true;
 
     let requestUrl = (ssl ? 'https' : 'http' ) + '://' + address + ':' + port + '/' + serviceOutputApiPath;
     let requestData = {};
@@ -212,10 +211,6 @@ function _executeNetworkService (in_service, in_inputs) {
     let requestDataKey;
 
     serviceInputTypes.forEach((serviceInputType) => {
-      if (!inputsValid) {
-        return;
-      }
-
       inputValue = in_inputs[serviceInputType];
       requestDataKey = serviceInputType;
 
@@ -226,11 +221,6 @@ function _executeNetworkService (in_service, in_inputs) {
 
       utils.setRequestData(requestData, requestDataKey, inputValue);
     });
-
-    if (!inputsValid) {
-      resolve(false);
-      return;
-    }
 
     let responseData = {};
     let requestOptions;
@@ -253,7 +243,7 @@ function _executeNetworkService (in_service, in_inputs) {
       };
     }
 
-    let result = {};
+    let serviceResult = {};
 
     timer.start(serviceAddress);
 
@@ -263,26 +253,30 @@ function _executeNetworkService (in_service, in_inputs) {
 
       if (error) {
         registry.addServiceStats({ service_key: serviceAddress, error, request_options: requestOptions, response_time: timer.stop(serviceAddress) });
-        result = { error };
+        serviceResult = { error };
       } else if (serviceResponseKey) {
         let serviceResponseBody = utils.getResponseKeyBody(body, serviceResponseKey);
         if (!serviceResponseBody) {
           registry.addServiceStats({ service_key: serviceAddress, error: body, request_options: requestOptions, response_time: timer.stop(serviceAddress) });
-          result = { error: body };
+          serviceResult = { error: body };
         } else {
           log.verbose('Response: ' + utils.keyValToString(serviceResponseBody));
           registry.addServiceStats({ service_key: serviceAddress, request_options: requestOptions, response_time: timer.stop(serviceAddress) });
-          result = serviceResponseBody;
+          serviceResult = serviceResponseBody;
         }
       } else {
         log.verbose('Response: ' + utils.keyValToString(body));
         registry.addServiceStats({ service_key: serviceAddress, request_options: requestOptions, response_time: timer.stop(serviceAddress) });
-        result = body;
+        serviceResult = body;
       }
 
       timer.clear(serviceAddress);
 
-      return resolve(result);
+      if (serviceResult === null) {
+        registry.addServiceStats({ service_key: serviceAddress, warning: 'returned null' });
+      }
+
+      return resolve(serviceResult);
     });
   });
 
@@ -309,21 +303,29 @@ function _executeFunctionService (in_service, in_inputs) {
       return;
     }
 
-    let serviceFunctionResult;
+    let serviceFunctionInputs = [];
+    serviceInputTypes.forEach((serviceInputType) => {
+      serviceFunctionInputs.push(in_inputs[serviceInputType]);
+    });
+
+    let serviceResult;
 
     timer.start(serviceFunctionName);
     try {
-      serviceFunctionResult = serviceFunction(in_inputs);
+      serviceResult = serviceFunction.apply(null, serviceFunctionInputs);
       registry.addServiceStats({ service_key: serviceFunctionName, response_time: timer.stop(serviceFunctionName) });
     } catch(error) {
-      log.error(serviceFunctionName + ' Error:' + error);
       registry.addServiceStats({ service_key: serviceFunctionName, error });
-      serviceFunctionResult = false;
+      serviceResult = false;
     }
     timer.clear(serviceFunctionName);
 
+    if (serviceResult === null) {
+      registry.addServiceStats({ service_key: serviceFunctionName, warning: 'returned null' });
+    }
+
     let result = {};
-    result = serviceFunctionResult;
+    result = serviceResult;
     resolve(result);
   });
 }
