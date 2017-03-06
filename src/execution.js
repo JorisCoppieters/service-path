@@ -43,7 +43,8 @@ function getAndExecuteServicePath (in_inputs, in_outputType) {
         let result = yield executeServicePath(servicePath, inputs);
 
         let tryCount = 0;
-        while (tryCount++ < 3 && !result[in_outputType]) {
+        while (tryCount++ < 3 && !result[in_outputType] && registry.hasRegistryChanged()) {
+          registry.clearRegistryChanged();
           log.warning('Trying again...');
           inputs = _cleanInputs(in_inputs);
           servicePath = yield paths.getServicePath(Object.keys(inputs), in_outputType);
@@ -313,20 +314,31 @@ function _executeFunctionService (in_service, in_inputs) {
     timer.start(serviceFunctionName);
     try {
       serviceResult = serviceFunction.apply(null, serviceFunctionInputs);
-      registry.addServiceStats({ service_key: serviceFunctionName, response_time: timer.stop(serviceFunctionName) });
     } catch(error) {
       registry.addServiceStats({ service_key: serviceFunctionName, error });
       serviceResult = false;
     }
-    timer.clear(serviceFunctionName);
 
     if (serviceResult === null) {
       registry.addServiceStats({ service_key: serviceFunctionName, warning: 'returned null' });
     }
 
-    let result = {};
-    result = serviceResult;
-    resolve(result);
+    let serviceResultPromise;
+
+    if (utils.isPromise(serviceResult)) {
+      serviceResultPromise = serviceResult;
+    } else {
+      serviceResultPromise = Promise.resolve();
+    }
+
+    serviceResultPromise.then(() => {
+      registry.addServiceStats({ service_key: serviceFunctionName, response_time: timer.stop(serviceFunctionName) });
+      timer.clear(serviceFunctionName);
+
+      let result = {};
+      result = serviceResult;
+      resolve(result);
+    }).catch(reject);
   });
 }
 

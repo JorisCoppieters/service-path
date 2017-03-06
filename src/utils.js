@@ -60,6 +60,12 @@ function toArray (in_value) {
 
 // ******************************
 
+function isPromise (in_value) {
+  return typeof(in_value) === "object" && typeof(in_value.then) === "function";
+}
+
+// ******************************
+
 function keyValToString (in_inputs) {
   let val;
   let keyVals = Object.keys(in_inputs).map((key) => {
@@ -132,8 +138,9 @@ function runGenerator (generatorFunction) {
 
 module.exports['arrayContainedIn'] = arrayContainedIn;
 module.exports['getProperty'] = getProperty;
-module.exports['getValue'] = getValue;
 module.exports['getResponseKeyBody'] = getResponseKeyBody;
+module.exports['getValue'] = getValue;
+module.exports['isPromise'] = isPromise;
 module.exports['keyValToString'] = keyValToString;
 module.exports['runGenerator'] = runGenerator;
 module.exports['setRequestData'] = setRequestData;

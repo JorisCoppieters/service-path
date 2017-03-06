@@ -49,6 +49,7 @@ function getServicePath (in_inputTypes, in_outputType) {
       let bestServices = serviceDistanceInfo.bestServices;
 
       if (bestServices[in_outputType] === undefined) {
+        _debugNoPathFound(in_outputType, serviceDistanceInfo.availableInputs);
         resolve([]);
         return;
       }
@@ -86,17 +87,19 @@ function getServicePath (in_inputTypes, in_outputType) {
         newInputs = true;
       }
 
-      let distances = serviceDistanceInfo.distances;
-      let distance;
-      log.verbose('Distances: [\n    ' + Object.keys(distances).map((key) => { distance = distances[key]; return key + ' => ' + distance }).join('\n    ') + '\n]');
-
-      servicePath = servicePath.filter((servicePathNode) => { return !!servicePath } );
+      servicePath = servicePath.filter((servicePathNode) => { return !!servicePathNode } );
       servicePath.reverse();
 
-      log.verbose('Service Path [\n    ' + servicePath.map((servicePath) => { return utils.getProperty(servicePath, 'name', ''); }).join('\n    ') + '\n]');
+      _logDistances(serviceDistanceInfo.distances);
+      _logServicePath(servicePath);
+
+      let servicePathDistances = {};
+      servicePath.forEach((servicePathNode) => {
+        servicePathDistances[utils.getProperty(servicePathNode, 'name', '')] = _getServiceDistance(servicePathNode);
+      });
 
       resolve(servicePath);
-      _addServicePathUsed(in_outputType, servicePath);
+      _addServicePathUsed(in_outputType, servicePathDistances);
     }).catch(reject);
   });
 }
@@ -107,9 +110,7 @@ function _getServicePathForMinDistance (in_serviceDistanceInfo) {
   if (in_serviceDistanceInfo.newInputs) {
     in_serviceDistanceInfo.newInputs = false;
 
-    let distances = in_serviceDistanceInfo.distances;
-    let distance;
-    log.verbose('Distances: [\n    ' + Object.keys(distances).map((key) => { distance = distances[key]; return key + ' => ' + distance }).join('\n    ') + '\n]');
+    _logDistances(in_serviceDistanceInfo.distances);
 
     return _calculateServiceDistances(in_serviceDistanceInfo).then(_getServicePathForMinDistance);
   }
@@ -204,9 +205,46 @@ function _calculateServiceDistances (in_serviceDistanceInfo) {
 // ******************************
 
 function _getServiceDistance (in_service) {
-  let serviceAccuracy = utils.getProperty(in_service, 'accuracy', 0);
+  let serviceAccuracy = utils.getProperty(in_service, 'accuracy', 100);
   let serviceLatency = utils.getProperty(in_service, 'latency', 0);
-  return (100 - serviceAccuracy) + serviceLatency + 1;
+  let serviceCost = utils.getProperty(in_service, 'cost', 0);
+  return (100 - serviceAccuracy) + serviceLatency + serviceCost + 1;
+}
+
+// ******************************
+
+function _logDistances (in_distances) {
+  log.verbose('Distances: [\n    ' + Object.keys(in_distances).map((key) => {
+    return key + ' => ' + in_distances[key]
+  }).join('\n    ') + '\n]');
+}
+
+// ******************************
+
+function _logServicePath (in_servicePath) {
+  log.verbose('Service Path [\n    ' + in_servicePath.map((servicePathNode) => {
+    return utils.getProperty(servicePathNode, 'name', '');
+  }).join('\n    ') + '\n]');
+}
+
+// ******************************
+
+function _debugNoPathFound (in_outputType, in_availableInputs) {
+  registry.getServices(false, in_outputType).then((servicesMatchingOutputType) => {
+    log.warning('No path found for output type: ' + in_outputType);
+
+    let serviceInputTypes;
+    let missingInputTypes;
+
+    servicesMatchingOutputType.forEach((serviceMatchingOutputType) => {
+
+      serviceInputTypes = utils.toArray(utils.getProperty(serviceMatchingOutputType, 'input'));
+      missingInputTypes = serviceInputTypes.filter((inputType) => { return in_availableInputs.indexOf(inputType) < 0; })
+
+      log.warning('- Could match: ' + serviceMatchingOutputType.key);
+      log.warning('  But missing input types: ' + missingInputTypes.join(','));
+    });
+  });
 }
 
 // ******************************
@@ -223,8 +261,8 @@ function _clearServicePathsUsed () {
 
 // ******************************
 
-function _addServicePathUsed (in_outputType, in_servicePath) {
-  g_SERVICE_PATHS_USED[in_outputType] = in_servicePath.map((servicePathNode) => { return servicePathNode.name; });
+function _addServicePathUsed (in_outputType, in_servicePathDistances) {
+  g_SERVICE_PATHS_USED[in_outputType] = in_servicePathDistances;
 }
 
 // ******************************

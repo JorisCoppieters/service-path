@@ -24,6 +24,7 @@ let utils = require('./utils');
 // ******************************
 
 let g_CAN_CONNECT = {};
+let g_REGISTRY_CHANGED = false;
 let g_CURRENT_REQUESTS = {};
 let g_SERVICE_REGISTRY = {};
 let g_SERVICE_FUNCTIONS = {};
@@ -35,6 +36,18 @@ let g_SERVICE_STATS = [];
 
 function setRegistry (in_serviceRegistry) {
   g_SERVICE_REGISTRY = _convertServicesRegistry(in_serviceRegistry);
+}
+
+// ******************************
+
+function hasRegistryChanged () {
+  return !!g_REGISTRY_CHANGED;
+}
+
+// ******************************
+
+function clearRegistryChanged () {
+  g_REGISTRY_CHANGED = undefined;
 }
 
 // ******************************
@@ -52,6 +65,7 @@ function getFunction (in_functionName) {
 // ******************************
 
 function disableService (in_serviceKey) {
+  g_REGISTRY_CHANGED = true;
   g_SERVICE_REGISTRY[in_serviceKey].enabled = false;
 }
 
@@ -305,6 +319,12 @@ function addServiceStats (in_serviceStats) {
 
 // ******************************
 
+function clearServiceStats () {
+  g_SERVICE_STATS = {};
+}
+
+// ******************************
+
 function getServiceStats () {
   return g_SERVICE_STATS;
 }
@@ -314,11 +334,14 @@ function getServiceStats () {
 // ******************************
 
 module.exports['addServiceStats'] = addServiceStats;
+module.exports['clearRegistryChanged'] = clearRegistryChanged;
+module.exports['clearServiceStats'] = clearServiceStats;
 module.exports['disableService'] = disableService;
 module.exports['getFunction'] = getFunction;
 module.exports['getService'] = getService;
-module.exports['getServiceStats'] = getServiceStats;
 module.exports['getServices'] = getServices;
+module.exports['getServiceStats'] = getServiceStats;
+module.exports['hasRegistryChanged'] = hasRegistryChanged;
 module.exports['matchServiceInputTypes'] = matchServiceInputTypes;
 module.exports['matchServiceOutputType'] = matchServiceOutputType;
 module.exports['setFunctions'] = setFunctions;

@@ -30,38 +30,13 @@ function printServiceStats () {
   let serviceKey;
   let serviceName;
   let serviceType;
+  let serviceTypeShort;
   let serviceError;
   let serviceWarning;
   let serviceResponseTime;
   let serviceRequestOptions;
 
-  let compareA;
-  let compareB;
-
-  let serviceStats = registry.getServiceStats();
-
-  serviceStats = serviceStats.sort((a, b) => {
-    serviceKey = utils.getProperty(a, 'service_key', false);
-    service = registry.getService(serviceKey);
-    if (!service) {
-      return -1;
-    }
-
-    compareA = utils.getProperty(service, 'name', false);
-
-    serviceKey = utils.getProperty(b, 'service_key', false);
-    service = registry.getService(serviceKey);
-    if (!service) {
-      return -1;
-    }
-
-    compareB = utils.getProperty(service, 'name', false);
-
-    if (compareA < compareB) { return -1; }
-    if (compareA > compareB) { return 1; }
-    return 0;
-  });
-
+  let serviceStats = _sortServiceStats(registry.getServiceStats());
   serviceStats.forEach((serviceStats) => {
     serviceKey = utils.getProperty(serviceStats, 'service_key', false);
     service = registry.getService(serviceKey);
@@ -74,6 +49,7 @@ function printServiceStats () {
     serviceError = utils.getProperty(serviceStats, 'error');
     serviceWarning = utils.getProperty(serviceStats, 'warning');
     serviceResponseTime = parseFloat(utils.getProperty(serviceStats, 'response_time', 0));
+    serviceTypeShort = (serviceType === 'function' ? '[F]' : '[N]');
 
     if (serviceError) {
       print.out(cprint.toRed('- ' + serviceName + ' (' + serviceKey + '):' + serviceError) + '\n');
@@ -83,9 +59,9 @@ function printServiceStats () {
         print.out(cprint.toRed('  * Timeout: ' + serviceRequestOptions.timeout + '\n'));
       }
     } else if (serviceWarning) {
-      print.out(cprint.toYellow('- ' + serviceName + ' (' + serviceKey + '): ' + serviceWarning) + '\n');
+      print.out(cprint.toYellow('- ' + serviceTypeShort + ' ' + serviceName + ' (' + serviceKey + '): ' + serviceWarning) + '\n');
     } else {
-      print.out(cprint.toWhite('- ' + serviceName + ' (' + serviceKey + ') took ' + serviceResponseTime + 'ms') + '\n');
+      print.out(cprint.toWhite('- ' + serviceTypeShort + ' ' + serviceName + ' (' + serviceKey + ') took ' + serviceResponseTime + 'ms') + '\n');
     }
   });
 }
@@ -97,10 +73,40 @@ function printServicePathsUsed () {
 
   let servicePaths = paths.getServicePathsUsed();
 
-  let servicePathNodeNames;
+  let servicePathDistances;
+  let servicePathTotalDistance;
+  let servicePathNodesWithDistance;
   Object.keys(servicePaths).forEach((servicePathKey) => {
-    servicePathNodeNames = servicePaths[servicePathKey];
-    print.out(cprint.toWhite('- ' + servicePathKey + ' [\n    ' + servicePathNodeNames.join('\n    ') + '\n]') + '\n');
+    servicePathDistances = servicePaths[servicePathKey];
+    servicePathTotalDistance = Object.keys(servicePathDistances).reduce((sum, k) => { return sum + servicePathDistances[k]; }, 0);
+    servicePathNodesWithDistance = Object.keys(servicePathDistances).map((k) => { return k + ' ('+servicePathDistances[k]+')'; });
+    print.out(cprint.toWhite('- ' + servicePathKey + ' (' + servicePathTotalDistance + ') [\n    ' + servicePathNodesWithDistance.join('\n    ') + '\n]') + '\n');
+  });
+}
+
+// ******************************
+
+function _sortServiceStats (in_serviceStats) {
+  return in_serviceStats.sort((a, b) => {
+    let serviceKey = utils.getProperty(a, 'service_key', false);
+    let service = registry.getService(serviceKey);
+    if (!service) {
+      return -1;
+    }
+
+    let compareA = utils.getProperty(service, 'name', false);
+
+    serviceKey = utils.getProperty(b, 'service_key', false);
+    service = registry.getService(serviceKey);
+    if (!service) {
+      return -1;
+    }
+
+    let compareB = utils.getProperty(service, 'name', false);
+
+    if (compareA < compareB) { return -1; }
+    if (compareA > compareB) { return 1; }
+    return 0;
   });
 }
 
