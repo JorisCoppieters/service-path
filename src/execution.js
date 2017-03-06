@@ -210,10 +210,6 @@ function _executeNetworkService (in_service, in_inputs) {
     let requestData = {};
     let requestDataInput;
     let requestDataKey;
-    let requestDataCheckFunction;
-    let requestDataCheckFunctionName;
-    let requestDataEncodeFunction;
-    let requestDataEncodeFunctionName;
 
     serviceInputTypes.forEach((serviceInputType) => {
       if (!inputsValid) {
@@ -221,30 +217,11 @@ function _executeNetworkService (in_service, in_inputs) {
       }
 
       inputValue = in_inputs[serviceInputType];
-      requestDataInput = utils.getProperty(serviceRequestData, serviceInputType, []);
-      requestDataKey = utils.getProperty(requestDataInput, 'key', serviceInputType);
+      requestDataKey = serviceInputType;
 
-      requestDataCheckFunctionName = utils.getProperty(requestDataInput, 'check_function', false);
-      if (requestDataCheckFunctionName) {
-        requestDataCheckFunction = registry.getFunction(requestDataCheckFunctionName);
-        if (!requestDataCheckFunction) {
-          log.warning('Cannot find function: ' + requestDataCheckFunctionName);
-        } else {
-          inputsValid = inputsValid && !requestDataCheckFunction(inputValue);
-          if (!inputsValid) {
-            return;
-          }
-        }
-      }
-
-      requestDataEncodeFunctionName = utils.getProperty(requestDataInput, 'encode_function', false);
-      if (requestDataEncodeFunctionName) {
-        requestDataEncodeFunction = registry.getFunction(requestDataEncodeFunctionName);
-        if (!requestDataEncodeFunction) {
-          log.warning('Cannot find function: ' + requestDataEncodeFunctionName);
-        } else {
-          inputValue = requestDataEncodeFunction(inputValue);
-        }
+      if (serviceRequestData) {
+        requestDataInput = utils.getProperty(serviceRequestData, serviceInputType, []);
+        requestDataKey = utils.getProperty(requestDataInput, 'key', serviceInputType);
       }
 
       utils.setRequestData(requestData, requestDataKey, inputValue);
