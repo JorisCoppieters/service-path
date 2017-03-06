@@ -312,7 +312,7 @@ function addServiceStats (in_serviceStats) {
 // ******************************
 
 function clearServiceStats () {
-  g_SERVICE_STATS = {};
+  g_SERVICE_STATS = [];
 }
 
 // ******************************

@@ -246,7 +246,7 @@ function getServicePathsUsed () {
 
 // ******************************
 
-function _clearServicePathsUsed () {
+function clearServicePathsUsed () {
   g_SERVICE_PATHS_USED = {};
 }
 
@@ -260,6 +260,7 @@ function _addServicePathUsed (in_outputType, in_servicePathDistances) {
 // Exports:
 // ******************************
 
+module.exports['clearServicePathsUsed'] = clearServicePathsUsed;
 module.exports['getServicePath'] = getServicePath;
 module.exports['getServicePathsUsed'] = getServicePathsUsed;
 

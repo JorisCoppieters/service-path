@@ -63,7 +63,6 @@ function printServicePathsUsed () {
   print.out(cprint.toMagenta('\n' + '-- ' + 'Service Paths Used' + ' --') + '\n');
 
   let servicePaths = paths.getServicePathsUsed();
-
   Object.keys(servicePaths).forEach((servicePathKey) => {
     let servicePathDistances = servicePaths[servicePathKey];
     let servicePathTotalDistance = Object.keys(servicePathDistances).reduce((sum, k) => { return sum + servicePathDistances[k]; }, 0);

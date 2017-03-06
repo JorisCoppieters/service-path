@@ -45,6 +45,9 @@ function getAndExecuteServicePath (in_inputs, in_outputType) {
         let tryCount = 0;
         while (tryCount++ < 3 && !result[in_outputType] && registry.hasRegistryChanged()) {
           registry.clearRegistryChanged();
+          registry.clearServiceStats();
+          paths.clearServicePathsUsed();
+
           log.warning('Trying again...');
           inputs = _cleanInputs(in_inputs);
           servicePath = yield paths.getServicePath(Object.keys(inputs), in_outputType);
@@ -239,25 +242,27 @@ function _executeNetworkService (in_service, in_inputs) {
     timer.start(serviceAddress);
 
     request(requestOptions, (error, response, body) => {
+      let responseTime = timer.stop(serviceAddress);
+
       log.verbose('Request Data: ' + utils.keyValToString(requestData));
       log.verbose('Request Options: ' + utils.keyValToString(requestOptions));
 
       if (error) {
-        registry.addServiceStats({ service_key: serviceAddress, error, request_options: requestOptions, response_time: timer.stop(serviceAddress) });
+        registry.addServiceStats({ service_key: serviceAddress, error, request_options: requestOptions, response_time: responseTime });
         serviceResult = { error };
       } else if (serviceResponseKey) {
         let serviceResponseBody = utils.getResponseKeyBody(body, serviceResponseKey);
         if (!serviceResponseBody) {
-          registry.addServiceStats({ service_key: serviceAddress, error: body, request_options: requestOptions, response_time: timer.stop(serviceAddress) });
+          registry.addServiceStats({ service_key: serviceAddress, error: body, request_options: requestOptions, response_time: responseTime });
           serviceResult = { error: body };
         } else {
           log.verbose('Response: ' + utils.keyValToString(serviceResponseBody));
-          registry.addServiceStats({ service_key: serviceAddress, request_options: requestOptions, response_time: timer.stop(serviceAddress) });
+          registry.addServiceStats({ service_key: serviceAddress, request_options: requestOptions, response_time: responseTime });
           serviceResult = serviceResponseBody;
         }
       } else {
         log.verbose('Response: ' + utils.keyValToString(body));
-        registry.addServiceStats({ service_key: serviceAddress, request_options: requestOptions, response_time: timer.stop(serviceAddress) });
+        registry.addServiceStats({ service_key: serviceAddress, request_options: requestOptions, response_time: responseTime });
         serviceResult = body;
       }
 
