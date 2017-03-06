@@ -79,14 +79,10 @@ function printSuggestions (in_keywords, in_imageFile, in_categoryId, in_title) {
     }
 
     if (typeof(suggestions) === 'object') {
-      let suggestionKey;
-      let suggestionValues;
-      let suggestionValue;
-      let value;
       let first = true;
 
       Object.keys(suggestions).forEach((suggestionKey) => {
-        suggestionValues = servicePath.getValue(suggestions[suggestionKey]);
+        let suggestionValues = servicePath.getValue(suggestions[suggestionKey]);
         if (!suggestionValues) {
           return;
         }

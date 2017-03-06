@@ -26,33 +26,25 @@ let utils = require('./utils');
 function printServiceStats () {
   print.out('\n' + cprint.toMagenta('-- ' + 'Service Stats' + ' --') + '\n');
 
-  let service;
-  let serviceName;
-  let serviceType;
-  let serviceTypeShort;
-  let serviceError;
-  let serviceWarning;
-  let serviceResponseTime;
-  let serviceRequestOptions;
-
   let serviceStats = _sortServiceStats(registry.getServiceStats());
   serviceStats.forEach((serviceStats) => {
     let serviceKey = utils.getProperty(serviceStats, 'service_key', false);
-    service = registry.getService(serviceKey);
+    let service = registry.getService(serviceKey);
     if (!service) {
       return;
     }
 
-    serviceName = utils.getProperty(service, 'name', false);
-    serviceType = utils.getProperty(service, 'type', false);
-    serviceError = utils.getProperty(serviceStats, 'error');
-    serviceWarning = utils.getProperty(serviceStats, 'warning');
-    serviceResponseTime = parseFloat(utils.getProperty(serviceStats, 'response_time', 0));
-    serviceTypeShort = (serviceType === 'function' ? '[F]' : '[N]');
+    let serviceName = utils.getProperty(service, 'name', false);
+    let serviceType = utils.getProperty(service, 'type', false);
+    let serviceError = utils.getProperty(serviceStats, 'error');
+    let serviceWarning = utils.getProperty(serviceStats, 'warning');
+    let serviceResponseTime = parseFloat(utils.getProperty(serviceStats, 'response_time', 0));
+    let serviceTypeShort = (serviceType === 'function' ? '[F]' : '[N]');
 
     if (serviceError) {
       print.out(cprint.toRed('- ' + serviceName + ' (' + serviceKey + '):' + serviceError) + '\n');
-      serviceRequestOptions = utils.getProperty(serviceStats, 'request_options');
+
+      let serviceRequestOptions = utils.getProperty(serviceStats, 'request_options');
       if (serviceRequestOptions) {
         print.out(cprint.toRed('  * URI: ' + serviceRequestOptions.uri + '\n'));
         print.out(cprint.toRed('  * Timeout: ' + serviceRequestOptions.timeout + '\n'));
@@ -72,13 +64,10 @@ function printServicePathsUsed () {
 
   let servicePaths = paths.getServicePathsUsed();
 
-  let servicePathDistances;
-  let servicePathTotalDistance;
-  let servicePathNodesWithDistance;
   Object.keys(servicePaths).forEach((servicePathKey) => {
-    servicePathDistances = servicePaths[servicePathKey];
-    servicePathTotalDistance = Object.keys(servicePathDistances).reduce((sum, k) => { return sum + servicePathDistances[k]; }, 0);
-    servicePathNodesWithDistance = Object.keys(servicePathDistances).map((k) => { return k + ' ('+servicePathDistances[k]+')'; });
+    let servicePathDistances = servicePaths[servicePathKey];
+    let servicePathTotalDistance = Object.keys(servicePathDistances).reduce((sum, k) => { return sum + servicePathDistances[k]; }, 0);
+    let servicePathNodesWithDistance = Object.keys(servicePathDistances).map((k) => { return k + ' ('+servicePathDistances[k]+')'; });
     print.out(cprint.toWhite('- ' + servicePathKey + ' (' + servicePathTotalDistance + ') [\n    ' + servicePathNodesWithDistance.join('\n    ') + '\n]') + '\n');
   });
 }

@@ -81,14 +81,10 @@ function getServices (in_inputTypes, in_outputType) {
   let matchedServices = [];
   let requests = [];
 
-  let service;
-  let serviceKey;
-  let request;
-
   let serviceKeys = Object.keys(g_SERVICE_REGISTRY);
   serviceKeys.forEach((serviceKey) => {
-    service = g_SERVICE_REGISTRY[serviceKey];
-    request = _matchService(service, in_inputTypes, in_outputType);
+    let service = g_SERVICE_REGISTRY[serviceKey];
+    let request = _matchService(service, in_inputTypes, in_outputType);
     request.then((matched) => {
       if (matched) {
         matchedServices.push(clone(matched));
@@ -110,18 +106,14 @@ function _convertServicesRegistry (in_serviceRegistry) {
   let fn = '_convertServicesRegistry';
 
   let convertedServicesRegistry = [];
-  let serviceKeys;
-  let serviceKey;
-  let service;
-  let serviceType;
 
   Object.keys(in_serviceRegistry).forEach((serviceKeys) => {
-    service = in_serviceRegistry[serviceKeys];
+    let service = in_serviceRegistry[serviceKeys];
     serviceKeys.split(/;/).forEach((serviceKey) => {
       service = clone(service);
       service['key'] = serviceKey;
       service['name'] = _getServiceName(service);
-      serviceType = utils.getProperty(service, 'type', 'unknown');
+      let serviceType = utils.getProperty(service, 'type', 'unknown');
 
       switch (serviceType)
       {

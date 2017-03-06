@@ -128,16 +128,9 @@ function _calculateServiceDistances (in_serviceDistanceInfo) {
 
   return new Promise((resolve, reject) => {
     registry.getServices(availableInputs).then((servicesWithInput) => {
-      let serviceName;
-      let serviceInputTypes;
-      let serviceInputType;
-      let serviceOutputType;
-      let serviceDistance;
-      let bestDistance;
-      let altDistance;
 
       servicesWithInput.forEach((serviceWithInput) => {
-        serviceOutputType = utils.getProperty(serviceWithInput, 'output');
+        let serviceOutputType = utils.getProperty(serviceWithInput, 'output');
         if (availableInputs.indexOf(serviceOutputType) < 0) {
           availableInputs.push(serviceOutputType);
           in_serviceDistanceInfo.newInputs = true;
@@ -145,9 +138,9 @@ function _calculateServiceDistances (in_serviceDistanceInfo) {
       });
 
       servicesWithInput.forEach((serviceWithInput) => {
-        serviceName = utils.getProperty(serviceWithInput, 'name');
-        serviceInputTypes = utils.toArray(utils.getProperty(serviceWithInput, 'input', []));
-        serviceOutputType = utils.getProperty(serviceWithInput, 'output');
+        let serviceName = utils.getProperty(serviceWithInput, 'name');
+        let serviceInputTypes = utils.toArray(utils.getProperty(serviceWithInput, 'input', []));
+        let serviceOutputType = utils.getProperty(serviceWithInput, 'output');
 
         if (seen[serviceName]) {
           return;
@@ -160,10 +153,12 @@ function _calculateServiceDistances (in_serviceDistanceInfo) {
           in_serviceDistanceInfo.newInputs = true;
         }
 
-        serviceDistance = _getServiceDistance(serviceWithInput);
-        bestDistance = distances[serviceOutputType];
+        let serviceDistance = _getServiceDistance(serviceWithInput);
+
+        let bestDistance = distances[serviceOutputType];
         bestDistance = (bestDistance === undefined) ? NaN : bestDistance;
-        altDistance = parseInt(serviceDistance);
+
+        let altDistance = parseInt(serviceDistance);
 
         if (!in_serviceDistanceInfo.newInputs) {
           serviceInputTypes = serviceInputTypes.map((serviceInputType) => {
@@ -233,13 +228,9 @@ function _debugNoPathFound (in_outputType, in_availableInputs) {
   registry.getServices(false, in_outputType).then((servicesMatchingOutputType) => {
     log.warning('No path found for output type: ' + in_outputType);
 
-    let serviceInputTypes;
-    let missingInputTypes;
-
     servicesMatchingOutputType.forEach((serviceMatchingOutputType) => {
-
-      serviceInputTypes = utils.toArray(utils.getProperty(serviceMatchingOutputType, 'input'));
-      missingInputTypes = serviceInputTypes.filter((inputType) => { return in_availableInputs.indexOf(inputType) < 0; })
+      let serviceInputTypes = utils.toArray(utils.getProperty(serviceMatchingOutputType, 'input'));
+      let missingInputTypes = serviceInputTypes.filter((inputType) => { return in_availableInputs.indexOf(inputType) < 0; })
 
       log.warning('- Could match: ' + serviceMatchingOutputType.key);
       log.warning('  But missing input types: ' + missingInputTypes.join(','));

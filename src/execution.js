@@ -79,13 +79,10 @@ function _executeServicePathNode (in_servicePath, in_availableInputs) {
     return Promise.resolve();
   }
 
-  let servicePathNode;
-  let servicePathNodeKey;
-  let servicePathNodeRequest;
   let servicePathNodeRequests = [];
 
   Object.keys(servicePath).forEach((servicePathKey) => {
-    servicePathNode = servicePath[servicePathKey];
+    let servicePathNode = servicePath[servicePathKey];
     if (!registry.matchServiceInputTypes(servicePathNode, Object.keys(availableInputs))) {
       return;
     }
@@ -101,19 +98,17 @@ function _executeServicePathNode (in_servicePath, in_availableInputs) {
 // ******************************
 
 function _executeServiceAndPopulateInputs (in_servicePath, in_servicePathNode, in_availableInputs) {
-  let servicePath = in_servicePath;
-  let servicePathNode = in_servicePathNode;
   let availableInputs = in_availableInputs;
 
   return new Promise((resolve, reject) => {
-    _executeService(servicePathNode, availableInputs).then((outputValue) => {
+    _executeService(in_servicePathNode, availableInputs).then((outputValue) => {
       if (!outputValue) {
         return resolve();
       }
 
-      let serviceName = utils.getProperty(servicePathNode, 'name');
-      let servicePathNodeKey = utils.getProperty(servicePathNode, 'key');
-      let serviceOutputType = utils.getProperty(servicePathNode, 'output');
+      let serviceName = utils.getProperty(in_servicePathNode, 'name');
+      let servicePathNodeKey = utils.getProperty(in_servicePathNode, 'key');
+      let serviceOutputType = utils.getProperty(in_servicePathNode, 'output');
 
       if (!availableInputs[serviceOutputType] && outputValue) {
         availableInputs[serviceOutputType] = outputValue;
@@ -134,7 +129,7 @@ function _executeServiceAndPopulateInputs (in_servicePath, in_servicePathNode, i
         return resolve();
       }
 
-      return _executeServicePathNode(servicePath, availableInputs).then(resolve).catch(reject);
+      return _executeServicePathNode(in_servicePath, availableInputs).then(resolve).catch(reject);
     }).catch(reject);
   });
 }
@@ -204,26 +199,21 @@ function _executeNetworkService (in_service, in_inputs) {
       port = (ssl) ? 443 : 80;
     }
 
-    let inputValue;
-
     let requestUrl = (ssl ? 'https' : 'http' ) + '://' + address + ':' + port + '/' + serviceOutputApiPath;
     let requestData = {};
-    let requestDataInput;
-    let requestDataKey;
 
     serviceInputTypes.forEach((serviceInputType) => {
-      inputValue = in_inputs[serviceInputType];
-      requestDataKey = serviceInputType;
+      let inputValue = in_inputs[serviceInputType];
+      let requestDataKey = serviceInputType;
 
       if (serviceRequestData) {
-        requestDataInput = utils.getProperty(serviceRequestData, serviceInputType, []);
+        let requestDataInput = utils.getProperty(serviceRequestData, serviceInputType, []);
         requestDataKey = utils.getProperty(requestDataInput, 'key', serviceInputType);
       }
 
       utils.setRequestData(requestData, requestDataKey, inputValue);
     });
 
-    let responseData = {};
     let requestOptions;
 
     if (serviceRequestType === 'POST') {
