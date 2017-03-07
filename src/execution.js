@@ -43,7 +43,7 @@ function getAndExecuteServicePath (in_inputs, in_outputType) {
         let result = yield executeServicePath(servicePath, inputs);
 
         let tryCount = 0;
-        while (tryCount++ < 3 && !result[in_outputType] && registry.hasRegistryChanged()) {
+        while (tryCount++ < 3 && (!result || !result[in_outputType]) && registry.hasRegistryChanged()) {
           registry.clearRegistryChanged();
           registry.clearServiceStats();
           paths.clearServicePathsUsed();
@@ -54,7 +54,8 @@ function getAndExecuteServicePath (in_inputs, in_outputType) {
           result = yield executeServicePath(servicePath, inputs);
         }
 
-        resolve(result);
+        let outputValue = utils.getValue(result[in_outputType]);
+        resolve(outputValue);
       } catch (err) {
         reject(err);
       }
@@ -326,14 +327,14 @@ function _executeFunctionService (in_service, in_inputs) {
       serviceResultPromise = Promise.resolve();
     }
 
-    serviceResultPromise.then(() => {
+    serviceResultPromise.then((serviceResult) => {
       registry.addServiceStats({ service_key: serviceFunctionName, response_time: timer.stop(serviceFunctionName) });
       timer.clear(serviceFunctionName);
-
-      let result = {};
-      result = serviceResult;
-      resolve(result);
-    }).catch(reject);
+      resolve(serviceResult);
+    }).catch((error) => {
+      registry.addServiceStats({ service_key: serviceFunctionName, error, response_time: timer.stop(serviceFunctionName) });
+      resolve({ error });
+    });
   });
 }
 

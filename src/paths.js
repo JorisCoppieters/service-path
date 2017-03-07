@@ -31,6 +31,10 @@ let g_SERVICE_PATHS_USED = {};
 function getServicePath (in_inputTypes, in_outputType) {
   log.info('Getting service path for "' + in_inputTypes.join('+') + '":"' + in_outputType + '"...');
 
+  if (in_inputTypes.indexOf(in_outputType) >= 0) {
+    return Promise.resolve([]);
+  }
+
   let distances = [];
   in_inputTypes.forEach((inputType) => {
     distances[inputType] = 0;
