@@ -42,19 +42,19 @@ function getAndExecuteServicePath (in_inputs, in_outputType) {
         let servicePath = yield paths.getServicePath(Object.keys(inputs), in_outputType);
         let result = yield executeServicePath(servicePath, inputs);
 
-        let tryCount = 0;
-        while (tryCount++ < 3 && (!result || !result[in_outputType]) && registry.hasRegistryChanged()) {
-          registry.clearRegistryChanged();
-          registry.clearServiceStats();
-          paths.clearServicePathsUsed();
+        // let tryCount = 0;
+        // while (tryCount++ < 3 && (!result || !result[in_outputType]) && registry.hasRegistryChanged()) {
+        //   registry.clearRegistryChanged();
+        //   registry.clearServiceStats();
+        //   paths.clearServicePathsUsed();
 
-          log.warning('Trying again...');
-          inputs = _cleanInputs(in_inputs);
-          servicePath = yield paths.getServicePath(Object.keys(inputs), in_outputType);
-          result = yield executeServicePath(servicePath, inputs);
-        }
+        //   log.warning('Trying again...');
+        //   inputs = _cleanInputs(in_inputs);
+        //   servicePath = yield paths.getServicePath(Object.keys(inputs), in_outputType);
+        //   result = yield executeServicePath(servicePath, inputs);
+        // }
 
-        let outputValue = utils.getValue(result[in_outputType]);
+        let outputValue = (result ? utils.getValue(result[in_outputType]) : null);
         resolve(outputValue);
       } catch (err) {
         reject(err);
@@ -114,10 +114,6 @@ function _executeServiceAndPopulateInputs (in_servicePath, in_servicePathNode, i
       let servicePathNodeKey = utils.getProperty(in_servicePathNode, 'key');
       let serviceOutputType = utils.getProperty(in_servicePathNode, 'output');
 
-      if (!availableInputs[serviceOutputType] && outputValue) {
-        availableInputs[serviceOutputType] = outputValue;
-      }
-
       let error = utils.getProperty(outputValue, 'error', false);
       let warning = utils.getProperty(outputValue, 'warning', false);
 
@@ -131,6 +127,10 @@ function _executeServiceAndPopulateInputs (in_servicePath, in_servicePathNode, i
         log.warning(serviceName + ': ' + warning);
         registry.disableService(servicePathNodeKey);
         return resolve();
+      }
+
+      if (!availableInputs[serviceOutputType] && outputValue) {
+        availableInputs[serviceOutputType] = outputValue;
       }
 
       return _executeServicePathNode(in_servicePath, availableInputs).then(resolve).catch(reject);
@@ -324,7 +324,7 @@ function _executeFunctionService (in_service, in_inputs) {
     if (utils.isPromise(serviceResult)) {
       serviceResultPromise = serviceResult;
     } else {
-      serviceResultPromise = Promise.resolve();
+      serviceResultPromise = Promise.resolve(serviceResult);
     }
 
     serviceResultPromise.then((serviceResult) => {

@@ -61,7 +61,7 @@ function toArray (in_value) {
 // ******************************
 
 function isPromise (in_value) {
-  return typeof(in_value) === "object" && typeof(in_value.then) === "function";
+  return in_value && typeof(in_value) === "object" && typeof(in_value.then) === "function";
 }
 
 // ******************************
