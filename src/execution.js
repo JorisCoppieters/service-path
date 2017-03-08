@@ -34,7 +34,7 @@ let g_CURRENT_REQUESTS = {};
 // Functions:
 // ******************************
 
-function getAndExecuteServicePath (in_inputs, in_outputType, in_tryCount) {
+function getAndExecuteServicePath (in_inputs, in_outputType, in_maxTryCount) {
   return new Promise((resolve, reject) => {
     utils.runGenerator(function* () {
       try {
@@ -42,8 +42,10 @@ function getAndExecuteServicePath (in_inputs, in_outputType, in_tryCount) {
         let servicePath = yield paths.getServicePath(Object.keys(inputs), in_outputType);
         let result = yield executeServicePath(servicePath, inputs);
 
-        let tryCount = (in_tryCount || 0);
-        while (tryCount++ < 3 && (!result || !result[in_outputType]) && registry.hasRegistryChanged()) {
+        let tryCount = 0;
+        let maxTryCount = (in_maxTryCount || 0)
+
+        while (tryCount++ < maxTryCount && (!result || !result[in_outputType]) && registry.hasRegistryChanged()) {
           registry.clearRegistryChanged();
           registry.clearServiceStats();
           paths.clearServicePathsUsed();
