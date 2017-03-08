@@ -42,7 +42,7 @@ function printServiceStats () {
     let serviceTypeShort = (serviceType === 'function' ? '[F]' : '[N]');
 
     if (serviceError) {
-      print.out(cprint.toRed('- ' + serviceName + ' (' + serviceKey + '):' + serviceError) + '\n');
+      print.out(cprint.toRed('- ' + serviceTypeShort + ' ' + serviceName + ' (' + serviceKey + '):' + serviceError) + '\n');
 
       let serviceRequestOptions = utils.getProperty(serviceStats, 'request_options');
       if (serviceRequestOptions) {

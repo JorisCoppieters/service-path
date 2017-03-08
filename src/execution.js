@@ -271,6 +271,7 @@ function _executeNetworkService (in_service, in_inputs) {
 
       if (serviceResult === null) {
         registry.addServiceStats({ service_key: serviceAddress, warning: 'returned null' });
+        serviceResult = { warning: 'returned null' };
       }
 
       return resolve(serviceResult);
@@ -287,7 +288,9 @@ function _executeNetworkService (in_service, in_inputs) {
 // ******************************
 
 function _executeFunctionService (in_service, in_inputs) {
-  log.info('Executing Function Service: ' + utils.getProperty(in_service, 'name'));
+  let serviceName = utils.getProperty(in_service, 'name');
+
+  log.info('Executing Function Service: ' + serviceName);
 
   return new Promise((resolve, reject) => {
     let serviceInputTypes = utils.toArray(utils.getProperty(in_service, 'input', []));
@@ -312,11 +315,7 @@ function _executeFunctionService (in_service, in_inputs) {
       serviceResult = serviceFunction.apply(null, serviceFunctionInputs);
     } catch(error) {
       registry.addServiceStats({ service_key: serviceFunctionName, error });
-      serviceResult = false;
-    }
-
-    if (serviceResult === null) {
-      registry.addServiceStats({ service_key: serviceFunctionName, warning: 'returned null' });
+      resolve({ error });
     }
 
     let serviceResultPromise;
@@ -328,7 +327,13 @@ function _executeFunctionService (in_service, in_inputs) {
     }
 
     serviceResultPromise.then((serviceResult) => {
-      registry.addServiceStats({ service_key: serviceFunctionName, response_time: timer.stop(serviceFunctionName) });
+      if (serviceResult === null) {
+        serviceResult = { warning: 'returned null' };
+        registry.addServiceStats({ service_key: serviceFunctionName, warning: 'returned null' });
+      } else {
+        registry.addServiceStats({ service_key: serviceFunctionName, response_time: timer.stop(serviceFunctionName) });
+      }
+
       timer.clear(serviceFunctionName);
       resolve(serviceResult);
     }).catch((error) => {
