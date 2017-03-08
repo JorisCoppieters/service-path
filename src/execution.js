@@ -34,7 +34,7 @@ let g_CURRENT_REQUESTS = {};
 // Functions:
 // ******************************
 
-function getAndExecuteServicePath (in_inputs, in_outputType) {
+function getAndExecuteServicePath (in_inputs, in_outputType, in_tryCount) {
   return new Promise((resolve, reject) => {
     utils.runGenerator(function* () {
       try {
@@ -42,17 +42,17 @@ function getAndExecuteServicePath (in_inputs, in_outputType) {
         let servicePath = yield paths.getServicePath(Object.keys(inputs), in_outputType);
         let result = yield executeServicePath(servicePath, inputs);
 
-        // let tryCount = 0;
-        // while (tryCount++ < 3 && (!result || !result[in_outputType]) && registry.hasRegistryChanged()) {
-        //   registry.clearRegistryChanged();
-        //   registry.clearServiceStats();
-        //   paths.clearServicePathsUsed();
+        let tryCount = (in_tryCount || 0);
+        while (tryCount++ < 3 && (!result || !result[in_outputType]) && registry.hasRegistryChanged()) {
+          registry.clearRegistryChanged();
+          registry.clearServiceStats();
+          paths.clearServicePathsUsed();
 
-        //   log.warning('Trying again...');
-        //   inputs = _cleanInputs(in_inputs);
-        //   servicePath = yield paths.getServicePath(Object.keys(inputs), in_outputType);
-        //   result = yield executeServicePath(servicePath, inputs);
-        // }
+          log.warning('Trying again...');
+          inputs = _cleanInputs(in_inputs);
+          servicePath = yield paths.getServicePath(Object.keys(inputs), in_outputType);
+          result = yield executeServicePath(servicePath, inputs);
+        }
 
         let outputValue = (result ? utils.getValue(result[in_outputType]) : null);
         resolve(outputValue);
