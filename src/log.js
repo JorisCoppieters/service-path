@@ -21,14 +21,15 @@ let print = require('./print');
 
 const k_LOG_LEVEL_ERROR = 1;
 const k_LOG_LEVEL_WARNING = 2;
-const k_LOG_LEVEL_INFO = 3;
-const k_LOG_LEVEL_VERBOSE = 4;
+const k_LOG_LEVEL_SUCCESS = 3;
+const k_LOG_LEVEL_INFO = 4;
+const k_LOG_LEVEL_VERBOSE = 5;
 
 // ******************************
 // Globals:
 // ******************************
 
-let g_LOG_LEVEL = k_LOG_LEVEL_WARNING;
+let g_LOG_LEVEL = k_LOG_LEVEL_SUCCESS;
 let g_LOG_SINGLE_LINE = false;
 
 // ******************************
@@ -77,6 +78,15 @@ function logWarning (in_message) {
 
 // ******************************
 
+function logSuccess (in_message) {
+  if (g_LOG_LEVEL >= k_LOG_LEVEL_SUCCESS) {
+    print.clearLine();
+    print.out(cprint.toGreen('SUCCESS: ' + _formatLogMessage(in_message)));
+  }
+}
+
+// ******************************
+
 function logInfo (in_message) {
   if (g_LOG_LEVEL >= k_LOG_LEVEL_INFO) {
     print.clearLine();
@@ -108,6 +118,7 @@ function _formatLogMessage (in_message) {
 
 module.exports['k_LOG_LEVEL_ERROR'] = k_LOG_LEVEL_ERROR;
 module.exports['k_LOG_LEVEL_WARNING'] = k_LOG_LEVEL_WARNING;
+module.exports['k_LOG_LEVEL_SUCCESS'] = k_LOG_LEVEL_SUCCESS;
 module.exports['k_LOG_LEVEL_INFO'] = k_LOG_LEVEL_INFO;
 module.exports['k_LOG_LEVEL_VERBOSE'] = k_LOG_LEVEL_VERBOSE;
 
@@ -117,6 +128,7 @@ module.exports['logLevel'] = getLogLevel;
 module.exports['logSingleLine'] = getLogSingleLine;
 module.exports['setLogLevel'] = setLogLevel;
 module.exports['setLogSingleLine'] = setLogSingleLine;
+module.exports['success'] = logSuccess;
 module.exports['verbose'] = logVerbose;
 module.exports['warning'] = logWarning;
 

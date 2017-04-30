@@ -47,17 +47,21 @@ function setup (config) {
 
 module.exports['k_LOG_LEVEL_ERROR'] = log.k_LOG_LEVEL_ERROR;
 module.exports['k_LOG_LEVEL_WARNING'] = log.k_LOG_LEVEL_WARNING;
+module.exports['k_LOG_LEVEL_SUCCESS'] = log.k_LOG_LEVEL_SUCCESS;
 module.exports['k_LOG_LEVEL_INFO'] = log.k_LOG_LEVEL_INFO;
 module.exports['k_LOG_LEVEL_VERBOSE'] = log.k_LOG_LEVEL_VERBOSE;
 
 module.exports['executeServicePath'] = execution.executeServicePath;
 module.exports['getAndExecuteServicePath'] = execution.getAndExecuteServicePath;
+module.exports['loadTestServicePath'] = execution.loadTestServicePath;
 module.exports['getProperty'] = utils.getProperty;
 module.exports['getServicePath'] = paths.getServicePath;
 module.exports['getServicePathsUsed'] = paths.getServicePathsUsed;
+module.exports['getServiceStats'] = registry.getServiceStats;
 module.exports['getValue'] = utils.getValue;
 module.exports['printServicePathsUsed'] = printInfo.servicePathsUsed;
 module.exports['printServiceStats'] = printInfo.serviceStats;
 module.exports['setup'] = setup;
+module.exports['log'] = log;
 
 // ******************************

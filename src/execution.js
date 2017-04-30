@@ -16,6 +16,7 @@ let clone = require('clone');
 let Promise = require('bluebird');
 let qs = require('querystring');
 let request = require('request');
+let cprint = require('color-print');
 
 let log = require('./log');
 let paths = require('./paths');
@@ -77,12 +78,84 @@ function executeServicePath (in_servicePath, in_inputs) {
 
 // ******************************
 
-function _executeServicePathNode (in_servicePath, in_availableInputs) {
+function loadTestServicePath (in_servicePath, in_inputs, in_rate, in_duration, in_maxResponseTime) {
+  cprint.cyan('Testing path load at a rate of ' + in_rate + '/s for ' + in_duration + 's');
+
+  let rate = Math.max(1, in_rate); // Per second
+  let delay = 1000 / rate;
+  let iterations = rate;
+  let passCount = 0;
+  let failCount = 0;
+  let slowestResponseTime = -1;
+  let fastestResponseTime = -1;
+  let totalResonseTime = 0;
+  let max
+
+  let doFn = () => {
+    let startDate = new Date();
+    let allData = clone(_cleanInputs(in_inputs));
+    let servicePath = clone(in_servicePath).reverse();
+    _executeServicePathNode(servicePath, allData).then((result) => {
+      let responseTime = (new Date() - startDate) / 1000;
+      if (!result) {
+        failCount++;
+      } else if (responseTime > in_maxResponseTime) {
+        failCount++;
+      } else {
+        passCount++;
+      }
+
+      let totalCount = passCount + failCount;
+
+      totalResonseTime += responseTime;
+
+      if (slowestResponseTime < 0 || responseTime > slowestResponseTime) {
+        slowestResponseTime = responseTime;
+      }
+
+      if (fastestResponseTime < 0 || responseTime < fastestResponseTime) {
+        fastestResponseTime = responseTime;
+      }
+
+      let averageResponseTime = Math.round(totalResonseTime/totalCount * 1000) / 1000;
+      let failAverage = Math.round(failCount/totalCount * 1000) / 10;
+
+      let message =
+        cprint.toGreen(passCount) + ' ' + cprint.toRed('(-' + failCount + ')')
+        + '   '
+        + cprint.toGreen('Avg. Fail') + cprint.toWhite(':') + ' ' + cprint.toCyan(failAverage + '%') + cprint.toWhite(',') + ' '
+        + cprint.toGreen('Worst') + cprint.toWhite(':') + ' ' + cprint.toCyan(slowestResponseTime + 's') + cprint.toWhite(',') + ' '
+        + cprint.toGreen('Avg.') + cprint.toWhite(':') + ' ' + cprint.toCyan(averageResponseTime + 's') + cprint.toWhite(',') + ' '
+        + cprint.toGreen('Best') + cprint.toWhite(':') + ' ' + cprint.toCyan(fastestResponseTime + 's') + cprint.toWhite(',');
+
+      message = (message.replace(/(\n|\r\n?)/g, ' ').trim() + ' '.repeat(500)).substr(0, 300);
+      print.out('\r' + message);
+    });
+  };
+
+  var loopFn = (idx) => {
+     setTimeout(function () {
+        doFn();
+        if (--idx > 0) loopFn(idx);
+     }, delay)
+  };
+
+  let loopCount = 0;
+  while(loopCount++ < in_duration) {
+    setTimeout(function () {
+        loopFn(iterations);
+     }, 1000 * (loopCount-1))
+  }
+}
+
+// ******************************
+
+function _executeServicePathNode (in_servicePath, in_availableInputs, in_lastOutput) {
   let servicePath = in_servicePath;
   let availableInputs = in_availableInputs;
 
   if (!Object.keys(servicePath).length) {
-    return Promise.resolve();
+    return Promise.resolve(in_lastOutput);
   }
 
   let servicePathNodeRequests = [];
@@ -135,7 +208,7 @@ function _executeServiceAndPopulateInputs (in_servicePath, in_servicePathNode, i
         availableInputs[serviceOutputType] = outputValue;
       }
 
-      return _executeServicePathNode(in_servicePath, availableInputs).then(resolve).catch(reject);
+      return _executeServicePathNode(in_servicePath, availableInputs, outputValue).then(resolve).catch(reject);
     }).catch(reject);
   });
 }
@@ -250,9 +323,15 @@ function _executeNetworkService (in_service, in_inputs) {
       log.verbose('Request Data: ' + utils.keyValToString(requestData));
       log.verbose('Request Options: ' + utils.keyValToString(requestOptions));
 
+      log.verbose('Response Error: ' + error);
+      log.verbose('Response Body: ' + body);
+
       if (error) {
         registry.addServiceStats({ service_key: serviceAddress, error, request_options: requestOptions, response_time: responseTime });
         serviceResult = { error };
+      } else if (!body) {
+        registry.addServiceStats({ service_key: serviceAddress, error: 'Empty body', request_options: requestOptions, response_time: responseTime });
+        serviceResult = { error: 'Empty body' };
       } else if (serviceResponseKey) {
         let serviceResponseBody = utils.getResponseKeyBody(body, serviceResponseKey);
         if (!serviceResponseBody) {
@@ -335,7 +414,6 @@ function _executeFunctionService (in_service, in_inputs) {
       } else {
         registry.addServiceStats({ service_key: serviceFunctionName, response_time: timer.stop(serviceFunctionName) });
       }
-
       timer.clear(serviceFunctionName);
       resolve(serviceResult);
     }).catch((error) => {
@@ -365,5 +443,6 @@ function _cleanInputs (in_inputs) {
 
 module.exports['getAndExecuteServicePath'] = getAndExecuteServicePath;
 module.exports['executeServicePath'] = executeServicePath;
+module.exports['loadTestServicePath'] = loadTestServicePath;
 
 // ******************************
