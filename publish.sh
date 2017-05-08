@@ -5,6 +5,11 @@ if [[ $# -lt 1 ]]; then
   exit;
 fi
 
+NPM=npm
+if [[ -e /usr/local/bin/npmme ]]; then
+  NPM=/usr/local/bin/npmme
+fi
+
 VERSION=$1
 
 function ask {

@@ -78,14 +78,8 @@ function testLoad (in_keywords, in_imageFile, in_categoryId, in_title, in_rate, 
       is_new: 1,
     };
 
-    let path = yield servicePath.getServicePath(Object.keys(inputs), output);
-    if (!path) {
-      cprint.yellow('Couldn\'t find path');
-      return;
-    }
-
     let maxResponseTime = 1000;
-    servicePath.loadTestServicePath(path, inputs, in_rate, in_duration, maxResponseTime);
+    servicePath.loadTestServicePath(inputs, output, in_rate, in_duration, maxResponseTime);
   });
 }
 
