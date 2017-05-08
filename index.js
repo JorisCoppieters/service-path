@@ -3,7 +3,7 @@
 // ******************************
 //
 //
-// SERVICE PATH v0.1.7
+// SERVICE PATH v0.1.8
 //
 // 0.1.0
 // - Initial release
@@ -26,7 +26,7 @@ let paths = require('./src/paths');
 // Constants:
 // ******************************
 
-const k_VERSION = '0.1.7';
+const k_VERSION = '0.1.8';
 
 // ******************************
 // Functions:
