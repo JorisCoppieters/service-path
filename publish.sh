@@ -34,6 +34,7 @@ if [[ `ask "Do you want to publish $VERSION?" && echo true` == true ]]; then
   $NPM publish
   echo "Tagging revision..."
   git commit -m "Set version to $VERSION"
+  git push
   git tag -a v$VERSION -m "Published v$VERSION"
   git push origin v$VERSION
 else
