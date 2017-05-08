@@ -52,7 +52,7 @@ function printServiceStats () {
     } else if (serviceWarning) {
       print.out(cprint.toYellow('- ' + serviceTypeShort + ' ' + serviceName + ' (' + serviceKey + '): ' + serviceWarning) + '\n');
     } else {
-      print.out(cprint.toWhite('- ' + serviceTypeShort + ' ' + serviceName + ' (' + serviceKey + ') took ' + serviceResponseTime + 'ms') + '\n');
+      print.out(cprint.toWhite('- ' + serviceTypeShort + ' ' + serviceName + ' (' + serviceKey + ') took ' + serviceResponseTime + 's') + '\n');
     }
   });
 }
