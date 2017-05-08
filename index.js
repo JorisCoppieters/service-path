@@ -57,6 +57,7 @@ module.exports['loadTestServicePath'] = execution.loadTestServicePath;
 module.exports['getProperty'] = utils.getProperty;
 module.exports['getServicePath'] = paths.getServicePath;
 module.exports['getServicePathsUsed'] = paths.getServicePathsUsed;
+module.exports['clearServicePathsUsed'] = paths.clearServicePathsUsed;
 module.exports['getServiceStats'] = registry.getServiceStats;
 module.exports['clearServiceStats'] = registry.clearServiceStats;
 module.exports['getValue'] = utils.getValue;
