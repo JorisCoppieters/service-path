@@ -304,6 +304,9 @@ function _executeNetworkService (in_service, in_inputs) {
         json: requestData,
         timeout: serviceTimeout,
         headers: serviceRequestHeaders,
+        rejectUnauthorized: false,
+        requestCert: true,
+        agent: false
       };
     } else {
       requestOptions = {
@@ -312,6 +315,9 @@ function _executeNetworkService (in_service, in_inputs) {
         timeout: serviceTimeout,
         json: true,
         headers: serviceRequestHeaders,
+        rejectUnauthorized: false,
+        requestCert: true,
+        agent: false
       };
     }
 
@@ -333,6 +339,8 @@ function _executeNetworkService (in_service, in_inputs) {
         serviceResult = { error };
 
       } else if (!body) {
+        console.log(error);
+        console.log(response);
         registry.addServiceStats({ service_key: serviceAddress, error: 'Empty body', request_options: requestOptions, response_time: responseTime });
         serviceResult = { error: 'Empty body' };
 

@@ -238,6 +238,7 @@ function _matchFunctionService (in_service) {
 // ******************************
 
 function _canConnect (in_service) {
+  let fn = '_canConnect';
   let serviceAddress = utils.getProperty(in_service, 'address');
   let serviceTimeout = utils.getProperty(in_service, 'status_timeout', 250);
 
@@ -246,26 +247,42 @@ function _canConnect (in_service) {
     return g_CURRENT_REQUESTS[currentRequestKey];
   }
 
-  let address = serviceAddress;
-  let port = 80;
-
-  let match = address.match(/(.*):(.*)/);
-  if (match) {
-    address = match[1];
-    port = match[2];
-  }
-
   let serviceStatusApiPath = utils.getProperty(in_service, 'status_api_path');
   if (!serviceStatusApiPath) {
     return Promise.resolve(true);
   }
 
-  let requestUrl = 'http://' + address + ':' + port + '/' + serviceStatusApiPath;
+  let address = serviceAddress;
+  let port = -1;
+  let ssl = false;
+
+  let match;
+
+  match = address.match(/(http(s?):\/\/)(.*)/);
+  if (match) {
+    address = match[3];
+    ssl = match[2] === 's';
+  }
+
+  match = address.match(/(.*):(.*)/);
+  if (match) {
+    address = match[1];
+    port = match[2];
+  }
+
+  if (port === -1) {
+    port = (ssl) ? 443 : 80;
+  }
+
+  let requestUrl = (ssl ? 'https' : 'http' ) + '://' + address + ':' + port + '/' + serviceStatusApiPath;
 
   let requestOptions = {
     uri: requestUrl,
     method: 'GET',
     timeout: serviceTimeout,
+    rejectUnauthorized: false,
+    requestCert: true,
+    agent: false
   };
 
   let responseData = {};
@@ -275,12 +292,14 @@ function _canConnect (in_service) {
       delete g_CURRENT_REQUESTS[serviceAddress];
 
       if (error) {
+        log.warning(fn + ' : Cannot connect to service: ' + error);
         return resolve(false);
       }
 
       try {
         responseData = JSON.parse(body);
       } catch (error) {
+        log.warning(fn + ' : Cannot parse service status response: ' + error);
         return resolve(false);
       }
 
