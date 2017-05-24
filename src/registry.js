@@ -208,19 +208,28 @@ function matchServiceOutputType (in_service, in_outputType) {
 
 function _matchNetworkService (in_service) {
   let serviceAddress = utils.getProperty(in_service, 'address');
+  let now = new Date().getTime();
+
   return new Promise((resolve, reject) => {
-    if (g_CAN_CONNECT[serviceAddress] === true) {
-      return resolve(in_service);
-    } else if (g_CAN_CONNECT[serviceAddress] === false) {
-      return resolve(false);
+    if (g_CAN_CONNECT[serviceAddress]) {
+      let canConnectData = g_CAN_CONNECT[serviceAddress];
+      if (canConnectData.expiry < now) {
+        delete g_CAN_CONNECT[serviceAddress];
+      } else {
+        if (canConnectData.canConnect === true) {
+          return resolve(in_service);
+        } else if (canConnectData.canConnect === false) {
+          return resolve(false);
+        }
+      }
     }
 
     _canConnect(in_service).then((canConnect) => {
       if (canConnect) {
         resolve(in_service);
-        g_CAN_CONNECT[serviceAddress] = true;
+        g_CAN_CONNECT[serviceAddress] = { expiry: now + 1000 * 60, canConnect: true };
       } else {
-        g_CAN_CONNECT[serviceAddress] = false;
+        g_CAN_CONNECT[serviceAddress] = { expiry: now + 1000 * 60, canConnect: false };
         log.warning('Cannot connect to: ' + utils.getProperty(in_service, 'name') + ' (' + serviceAddress + ')');
         addServiceStats({ service_key: serviceAddress, warning: 'Cannot connect' });
       }
