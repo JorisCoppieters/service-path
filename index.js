@@ -3,7 +3,7 @@
 // ******************************
 //
 //
-// SERVICE PATH v0.1.10
+// SERVICE PATH v0.1.11
 //
 // 0.1.9
 // - Allow unsecured HTTPS requests
@@ -29,7 +29,7 @@ let paths = require('./src/paths');
 // Constants:
 // ******************************
 
-const k_VERSION = '0.1.10';
+const k_VERSION = '0.1.11';
 
 // ******************************
 // Functions:
