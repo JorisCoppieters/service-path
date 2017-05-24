@@ -196,13 +196,13 @@ function _executeServiceAndPopulateInputs (in_servicePath, in_servicePathNode, i
 
       if (error) {
         log.error(serviceName + ': ' + error);
-        // registry.disableService(servicePathNodeKey);
+        registry.disableService(servicePathNodeKey);
         return resolve();
       }
 
       if (warning) {
         log.warning(serviceName + ': ' + warning);
-        // registry.disableService(servicePathNodeKey);
+        registry.disableService(servicePathNodeKey);
         return resolve();
       }
 
@@ -339,8 +339,6 @@ function _executeNetworkService (in_service, in_inputs) {
         serviceResult = { error };
 
       } else if (!body) {
-        console.log(error);
-        console.log(response);
         registry.addServiceStats({ service_key: serviceAddress, error: 'Empty body', request_options: requestOptions, response_time: responseTime });
         serviceResult = { error: 'Empty body' };
 
@@ -452,6 +450,8 @@ function _cleanInputs (in_inputs) {
     }
     cleanInputs[inputKey] = in_inputs[inputKey];
   });
+
+  cleanInputs['NULL'] = false;
 
   return cleanInputs;
 }

@@ -28,6 +28,7 @@ let g_REGISTRY_CHANGED = false;
 let g_CURRENT_REQUESTS = {};
 let g_SERVICE_REGISTRY = {};
 let g_SERVICE_FUNCTIONS = {};
+let g_DISABLE_SERVICE = {};
 let g_SERVICE_STATS = [];
 
 // ******************************
@@ -65,8 +66,10 @@ function getFunction (in_functionName) {
 // ******************************
 
 function disableService (in_serviceKey) {
+  let now = new Date().getTime();
+
   g_REGISTRY_CHANGED = true;
-  g_SERVICE_REGISTRY[in_serviceKey].enabled = false;
+  g_DISABLE_SERVICE[in_serviceKey] = { expiry: now + 1000 * 60, disabled: true };
 }
 
 // ******************************
@@ -152,7 +155,7 @@ function _matchService (in_service, in_inputTypes, in_outputType) {
 
   return new Promise((resolve) => {
 
-    if (!utils.getProperty(in_service, 'enabled', true)) {
+    if (_serviceDisabled(in_service)) {
       resolve(false);
       return;
     }
@@ -184,6 +187,30 @@ function _matchService (in_service, in_inputTypes, in_outputType) {
         break;
     }
   });
+}
+
+// ******************************
+
+function _serviceDisabled (in_service) {
+  if (!utils.getProperty(in_service, 'enabled', true)) {
+    return true;
+  }
+
+  let now = new Date().getTime();
+
+  let serviceKey = utils.getProperty(in_service, 'key', false);
+  if (g_DISABLE_SERVICE[serviceKey]) {
+    let disabledServiceData = g_DISABLE_SERVICE[serviceKey];
+    if (disabledServiceData.expiry < now) {
+      delete g_DISABLE_SERVICE[serviceKey];
+    } else {
+      if (disabledServiceData.disabled === true) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 // ******************************

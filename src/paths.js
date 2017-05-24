@@ -170,7 +170,7 @@ function _calculateServiceDistances (in_serviceDistanceInfo) {
               return serviceInputType;
             }
             serviceInputType = serviceInputType.replace(/\?$/,'');
-            return (distances[serviceInputType] !== undefined ? serviceInputType : null);
+            return (distances[serviceInputType] !== undefined ? serviceInputType : 'NULL');
           }).filter((serviceInputType) => {
             return !!serviceInputType;
           });
