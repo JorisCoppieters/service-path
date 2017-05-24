@@ -69,7 +69,7 @@ function disableService (in_serviceKey) {
   let now = new Date().getTime();
 
   g_REGISTRY_CHANGED = true;
-  g_DISABLE_SERVICE[in_serviceKey] = { expiry: now + 1000 * 60, disabled: true };
+  g_DISABLE_SERVICE[in_serviceKey] = { expiry: now + 1000, disabled: true };
 }
 
 // ******************************
