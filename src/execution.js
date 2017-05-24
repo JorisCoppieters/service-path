@@ -48,8 +48,8 @@ function getAndExecuteServicePath (in_inputs, in_outputType, in_maxTryCount) {
 
         while (tryCount++ < maxTryCount && (!result || !result[in_outputType]) && registry.hasRegistryChanged()) {
           registry.clearRegistryChanged();
-          registry.clearServiceStats();
-          paths.clearServicePathsUsed();
+          // registry.clearServiceStats();
+          // paths.clearServicePathsUsed();
 
           log.warning('Trying again...');
           inputs = _cleanInputs(in_inputs);
