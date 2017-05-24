@@ -28,7 +28,7 @@ let g_REGISTRY_CHANGED = false;
 let g_CURRENT_REQUESTS = {};
 let g_SERVICE_REGISTRY = {};
 let g_SERVICE_FUNCTIONS = {};
-let g_DISABLE_SERVICE = {};
+let g_DISABLE_SERVICES = {};
 let g_SERVICE_STATS = [];
 
 // ******************************
@@ -69,7 +69,13 @@ function disableService (in_serviceKey) {
   let now = new Date().getTime();
 
   g_REGISTRY_CHANGED = true;
-  g_DISABLE_SERVICE[in_serviceKey] = { expiry: now + 1000, disabled: true };
+  g_DISABLE_SERVICES[in_serviceKey] = { expiry: now + 1000 * 60, disabled: true };
+}
+
+// ******************************
+
+function clearDisabledServices (in_serviceKey) {
+  g_DISABLE_SERVICES = {};
 }
 
 // ******************************
@@ -199,10 +205,10 @@ function _serviceDisabled (in_service) {
   let now = new Date().getTime();
 
   let serviceKey = utils.getProperty(in_service, 'key', false);
-  if (g_DISABLE_SERVICE[serviceKey]) {
-    let disabledServiceData = g_DISABLE_SERVICE[serviceKey];
+  if (g_DISABLE_SERVICES[serviceKey]) {
+    let disabledServiceData = g_DISABLE_SERVICES[serviceKey];
     if (disabledServiceData.expiry < now) {
-      delete g_DISABLE_SERVICE[serviceKey];
+      delete g_DISABLE_SERVICES[serviceKey];
     } else {
       if (disabledServiceData.disabled === true) {
         return true;
@@ -383,6 +389,7 @@ function getServiceStats () {
 module.exports['addServiceStats'] = addServiceStats;
 module.exports['clearRegistryChanged'] = clearRegistryChanged;
 module.exports['clearServiceStats'] = clearServiceStats;
+module.exports['clearDisabledServices'] = clearDisabledServices;
 module.exports['disableService'] = disableService;
 module.exports['getFunction'] = getFunction;
 module.exports['getService'] = getService;

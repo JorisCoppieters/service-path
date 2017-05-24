@@ -63,6 +63,7 @@ module.exports['getServicePathsUsed'] = paths.getServicePathsUsed;
 module.exports['clearServicePathsUsed'] = paths.clearServicePathsUsed;
 module.exports['getServiceStats'] = registry.getServiceStats;
 module.exports['clearServiceStats'] = registry.clearServiceStats;
+module.exports['clearDisabledServices'] = registry.clearDisabledServices;
 module.exports['getValue'] = utils.getValue;
 module.exports['printServicePathsUsed'] = printInfo.servicePathsUsed;
 module.exports['getServicePathsUsedHTML'] = printInfo.getServicePathsUsedHTML;
