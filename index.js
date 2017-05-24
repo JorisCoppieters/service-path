@@ -65,7 +65,9 @@ module.exports['getServiceStats'] = registry.getServiceStats;
 module.exports['clearServiceStats'] = registry.clearServiceStats;
 module.exports['getValue'] = utils.getValue;
 module.exports['printServicePathsUsed'] = printInfo.servicePathsUsed;
+module.exports['getServicePathsUsedHTML'] = printInfo.getServicePathsUsedHTML;
 module.exports['printServiceStats'] = printInfo.serviceStats;
+module.exports['getServiceStatsHTML'] = printInfo.getServiceStatsHTML;
 module.exports['setup'] = setup;
 module.exports['log'] = log;
 
