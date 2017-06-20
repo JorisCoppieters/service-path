@@ -35,7 +35,7 @@ let g_CURRENT_REQUESTS = {};
 // Functions:
 // ******************************
 
-function getAndExecuteServicePath (in_inputs, in_outputType, in_maxTryCount) {
+function getAndExecuteServicePath (in_inputs, in_outputType, in_maxTryCount, in_returnAll) {
   return new Promise((resolve, reject) => {
     utils.runGenerator(function* () {
       try {
@@ -58,7 +58,12 @@ function getAndExecuteServicePath (in_inputs, in_outputType, in_maxTryCount) {
         }
 
         let outputValue = (result ? utils.getValue(result[in_outputType]) : null);
-        resolve(outputValue);
+
+        if (in_returnAll) {
+          resolve(result);
+        } else {
+          resolve(outputValue);
+        }
       } catch (err) {
         reject(err);
       }
