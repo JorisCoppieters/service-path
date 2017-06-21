@@ -240,6 +240,8 @@ function matchServiceOutputType (in_service, in_outputType) {
 // ******************************
 
 function _matchNetworkService (in_service) {
+  let serviceKey = utils.getProperty(in_service, 'key');
+  let serviceName = utils.getProperty(in_service, 'name');
   let serviceAddress = utils.getProperty(in_service, 'address');
   let now = new Date().getTime();
 
@@ -264,7 +266,7 @@ function _matchNetworkService (in_service) {
       } else {
         g_CAN_CONNECT[serviceAddress] = { expiry: now + 1000 * 60, canConnect: false };
         log.warning('Cannot connect to: ' + utils.getProperty(in_service, 'name') + ' (' + serviceAddress + ')');
-        addServiceStats({ service_key: serviceAddress, warning: 'Cannot connect' });
+        addServiceStats({ service_key: serviceKey, warning: 'Cannot connect' });
       }
       resolve(false);
     }).catch(reject);

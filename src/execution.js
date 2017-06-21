@@ -243,6 +243,7 @@ function _executeService (in_service, in_inputs) {
 // ******************************
 
 function _executeNetworkService (in_service, in_inputs) {
+  let serviceKey = utils.getProperty(in_service, 'key');
   let serviceName = utils.getProperty(in_service, 'name');
   let serviceAddress = utils.getProperty(in_service, 'address');
 
@@ -343,40 +344,40 @@ function _executeNetworkService (in_service, in_inputs) {
       log.verbose('Response Body: ' + body);
 
       if (error) {
-        registry.addServiceStats({ service_key: serviceAddress, error, request_options: requestOptions, response_time: responseTime });
+        registry.addServiceStats({ service_key: serviceKey, error, request_options: requestOptions, response_time: responseTime });
         serviceResult = { error };
 
       } else if (!body) {
-        registry.addServiceStats({ service_key: serviceAddress, error: 'Empty body', request_options: requestOptions, response_time: responseTime });
+        registry.addServiceStats({ service_key: serviceKey, error: 'Empty body', request_options: requestOptions, response_time: responseTime });
         serviceResult = { error: 'Empty body' };
 
       } else if (error = utils.getResponseKeyBody(body, 'error')) {
-        registry.addServiceStats({ service_key: serviceAddress, error, request_options: requestOptions, response_time: responseTime });
+        registry.addServiceStats({ service_key: serviceKey, error, request_options: requestOptions, response_time: responseTime });
         serviceResult = { error };
 
       } else if (serviceResponseKey) {
         let serviceResponseBody = utils.getResponseKeyBody(body, serviceResponseKey);
 
         if (!serviceResponseBody) {
-          registry.addServiceStats({ service_key: serviceAddress, error: body, request_options: requestOptions, response_time: responseTime });
+          registry.addServiceStats({ service_key: serviceKey, error: body, request_options: requestOptions, response_time: responseTime });
           serviceResult = { error: 'Response key "' + serviceResponseKey + '" not found in body' };
 
         } else {
-          log.verbose('Response: ' + utils.keyValToString(serviceResponseBody));
-          registry.addServiceStats({ service_key: serviceAddress, request_options: requestOptions, response_time: responseTime });
+          log.verbose('Response key: ' + utils.keyValToString(serviceResponseBody));
+          registry.addServiceStats({ service_key: serviceKey, request_options: requestOptions, response_time: responseTime });
           serviceResult = serviceResponseBody;
 
         }
       } else {
         log.verbose('Response: ' + utils.keyValToString(body));
-        registry.addServiceStats({ service_key: serviceAddress, request_options: requestOptions, response_time: responseTime });
+        registry.addServiceStats({ service_key: serviceKey, request_options: requestOptions, response_time: responseTime });
         serviceResult = body;
       }
 
       timer.clear(serviceAddress);
 
       if (serviceResult === null) {
-        registry.addServiceStats({ service_key: serviceAddress, warning: 'returned null' });
+        registry.addServiceStats({ service_key: serviceKey, warning: 'returned null' });
         serviceResult = { warning: 'returned null' };
       }
 
@@ -394,6 +395,7 @@ function _executeNetworkService (in_service, in_inputs) {
 // ******************************
 
 function _executeFunctionService (in_service, in_inputs) {
+  let serviceKey = utils.getProperty(in_service, 'key');
   let serviceName = utils.getProperty(in_service, 'name');
 
   log.info('Executing Function Service: ' + serviceName);
@@ -420,7 +422,7 @@ function _executeFunctionService (in_service, in_inputs) {
     try {
       serviceResult = serviceFunction.apply(null, serviceFunctionInputs);
     } catch(error) {
-      registry.addServiceStats({ service_key: serviceFunctionName, error });
+      registry.addServiceStats({ service_key: serviceKey, error });
       resolve({ error });
     }
 
@@ -435,14 +437,14 @@ function _executeFunctionService (in_service, in_inputs) {
     serviceResultPromise.then((serviceResult) => {
       if (serviceResult === null) {
         serviceResult = { warning: 'returned null' };
-        registry.addServiceStats({ service_key: serviceFunctionName, warning: 'returned null' });
+        registry.addServiceStats({ service_key: serviceKey, warning: 'returned null' });
       } else {
-        registry.addServiceStats({ service_key: serviceFunctionName, response_time: timer.stop(serviceFunctionName) });
+        registry.addServiceStats({ service_key: serviceKey, response_time: timer.stop(serviceFunctionName) });
       }
       timer.clear(serviceFunctionName);
       resolve(serviceResult);
     }).catch((error) => {
-      registry.addServiceStats({ service_key: serviceFunctionName, error, response_time: timer.stop(serviceFunctionName) });
+      registry.addServiceStats({ service_key: serviceKey, error, response_time: timer.stop(serviceFunctionName) });
       resolve({ error });
     });
   });
