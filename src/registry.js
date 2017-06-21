@@ -281,10 +281,11 @@ function _matchFunctionService (in_service) {
 
 function _canConnect (in_service) {
   let fn = '_canConnect';
+  let serviceName = utils.getProperty(in_service, 'name');
   let serviceAddress = utils.getProperty(in_service, 'address');
   let serviceTimeout = utils.getProperty(in_service, 'status_timeout', 250);
 
-  let currentRequestKey = serviceAddress;
+  let currentRequestKey = serviceName + ':' + serviceAddress;
   if (g_CURRENT_REQUESTS[currentRequestKey] !== undefined && g_CURRENT_REQUESTS[currentRequestKey].then) {
     return g_CURRENT_REQUESTS[currentRequestKey];
   }
@@ -331,7 +332,7 @@ function _canConnect (in_service) {
 
   let promise = new Promise((resolve) => {
     request(requestOptions, (error, response, body) => {
-      delete g_CURRENT_REQUESTS[serviceAddress];
+      delete g_CURRENT_REQUESTS[currentRequestKey];
 
       if (error) {
         log.warning(fn + ' : Cannot connect to service: ' + error);
