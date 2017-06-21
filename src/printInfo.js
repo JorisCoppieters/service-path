@@ -78,10 +78,12 @@ function getServiceStatsHTML () {
     let serviceError = utils.getProperty(serviceStats, 'error');
     let serviceWarning = utils.getProperty(serviceStats, 'warning');
     let serviceResponseTime = parseFloat(utils.getProperty(serviceStats, 'response_time', 0));
-    let serviceTypeShort = (serviceType === 'function' ? '[F]' : '[N]');
+    let networkService = (serviceType === 'network');
+    let serviceTypeShort = (networkService ? '[N]' : '[F]');
+    let serviceReference = utils.getProperty(service, networkService ? 'address' : 'function', serviceName);
 
     if (serviceError) {
-      htmlOutput += '<li class="service-stats-list-entry error">' + serviceTypeShort + ' ' + serviceName + ' (' + serviceKey + '):' + serviceError;
+      htmlOutput += '<li class="service-stats-list-entry error">' + serviceTypeShort + ' ' + serviceName + ' (' + serviceReference + '):' + serviceError;
 
       let serviceRequestOptions = utils.getProperty(serviceStats, 'request_options');
       if (serviceRequestOptions) {
@@ -93,9 +95,9 @@ function getServiceStatsHTML () {
 
       htmlOutput += '</li>';
     } else if (serviceWarning) {
-      htmlOutput += '<li class="service-stats-list-entry warning">' + serviceTypeShort + ' ' + serviceName + ' (' + serviceKey + '): ' + serviceWarning + '</li>';
+      htmlOutput += '<li class="service-stats-list-entry warning">' + serviceTypeShort + ' ' + serviceName + ' (' + serviceReference + '): ' + serviceWarning + '</li>';
     } else {
-      htmlOutput += '<li class="service-stats-list-entry">' + serviceTypeShort + ' ' + serviceName + ' (' + serviceKey + ') took ' + serviceResponseTime + 's' + '</li>';
+      htmlOutput += '<li class="service-stats-list-entry">' + serviceTypeShort + ' ' + serviceName + ' (' + serviceReference + ') took ' + serviceResponseTime + 's' + '</li>';
     }
   });
 
