@@ -127,11 +127,11 @@ function _convertServicesRegistry (in_serviceRegistry) {
       switch (serviceType)
       {
         case 'network':
-          service['address'] = serviceKey;
+          service['address'] = service['address'] || serviceKey;
           break;
 
         case 'function':
-          service['function'] = serviceKey;
+          service['function'] = service['function'] || serviceKey;
           break;
 
         default:

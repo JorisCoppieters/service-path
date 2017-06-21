@@ -248,7 +248,7 @@ function _executeNetworkService (in_service, in_inputs) {
 
   log.info('Executing Network Service: ' + serviceName);
 
-  let currentRequestKey = serviceAddress + ':' + utils.keyValToString(in_inputs);
+  let currentRequestKey = serviceName + ':' + serviceAddress + ':' + utils.keyValToString(in_inputs);
   if (g_CURRENT_REQUESTS[currentRequestKey] !== undefined && g_CURRENT_REQUESTS[currentRequestKey].then) {
     return g_CURRENT_REQUESTS[currentRequestKey];
   }
@@ -291,10 +291,13 @@ function _executeNetworkService (in_service, in_inputs) {
     serviceInputTypes.forEach((serviceInputType) => {
       let inputValue = in_inputs[serviceInputType];
       let requestDataKey = serviceInputType;
+      let urlKeySubstitution = new RegExp('{' + requestDataKey + '}');
 
       if (serviceRequestData) {
         let requestDataInput = utils.getProperty(serviceRequestData, serviceInputType, []);
         requestDataKey = utils.getProperty(requestDataInput, 'key', serviceInputType);
+      } else if (requestUrl.match(urlKeySubstitution)) {
+        requestUrl = requestUrl.replace(urlKeySubstitution, inputValue);
       }
 
       utils.setRequestData(requestData, requestDataKey, inputValue);
