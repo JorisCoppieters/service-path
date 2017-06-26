@@ -289,20 +289,23 @@ function _executeNetworkService (in_service, in_inputs) {
     let requestUrl = (ssl ? 'https' : 'http' ) + '://' + address + ':' + port + '/' + serviceOutputApiPath;
     let requestData = {};
 
-    serviceInputTypes.forEach((serviceInputType) => {
-      let inputValue = in_inputs[serviceInputType];
-      let requestDataKey = serviceInputType;
-      let urlKeySubstitution = new RegExp('{' + requestDataKey + '}');
-
-      if (serviceRequestData) {
+    if (serviceRequestData) {
+      Object.keys(serviceRequestData).forEach((serviceInputType) => {
+        let inputValue = in_inputs[serviceInputType];
         let requestDataInput = utils.getProperty(serviceRequestData, serviceInputType, []);
-        requestDataKey = utils.getProperty(requestDataInput, 'key', serviceInputType);
-      } else if (requestUrl.match(urlKeySubstitution)) {
-        requestUrl = requestUrl.replace(urlKeySubstitution, inputValue);
-      }
-
-      utils.setRequestData(requestData, requestDataKey, inputValue);
-    });
+        let requestDataKey = utils.getProperty(requestDataInput, 'key', serviceInputType);
+        let requestDataVal = utils.getProperty(requestDataInput, 'val', inputValue);
+        utils.setRequestData(requestData, requestDataKey, requestDataVal);
+      });
+    } else {
+      serviceInputTypes.forEach((serviceInputType) => {
+        let inputValue = in_inputs[serviceInputType];
+        let urlKeySubstitution = new RegExp('{' + serviceInputType + '}');
+        if (requestUrl.match(urlKeySubstitution)) {
+          requestUrl = requestUrl.replace(urlKeySubstitution, inputValue);
+        }
+      });
+    }
 
     let requestOptions;
 

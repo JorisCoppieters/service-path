@@ -68,7 +68,7 @@ function isPromise (in_value) {
 
 function keyValToString (in_inputs) {
   let keyVals = Object.keys(in_inputs).map((key) => {
-    let val = in_inputs[key];
+    let val = in_inputs[key] || 'NULL';
     if (val.length > 100) {
       val = val.substr(0, 100) + '...';
     }
