@@ -39,10 +39,12 @@ function printServiceStats () {
     let serviceError = utils.getProperty(serviceStats, 'error');
     let serviceWarning = utils.getProperty(serviceStats, 'warning');
     let serviceResponseTime = parseFloat(utils.getProperty(serviceStats, 'response_time', 0));
-    let serviceTypeShort = (serviceType === 'function' ? '[F]' : '[N]');
+    let networkService = (serviceType === 'network');
+    let serviceTypeShort = (networkService ? '[N]' : '[F]');
+    let serviceReference = utils.getProperty(service, networkService ? 'address' : 'function', serviceName);
 
     if (serviceError) {
-      print.out(cprint.toRed('- ' + serviceTypeShort + ' ' + serviceName + ' (' + serviceKey + '):' + serviceError) + '\n');
+      print.out(cprint.toRed('- ' + serviceTypeShort + ' ' + serviceName + ' (' + serviceReference + '):' + serviceError) + '\n');
 
       let serviceRequestOptions = utils.getProperty(serviceStats, 'request_options');
       if (serviceRequestOptions) {
@@ -50,9 +52,9 @@ function printServiceStats () {
         print.out(cprint.toRed('  * Timeout: ' + serviceRequestOptions.timeout + '\n'));
       }
     } else if (serviceWarning) {
-      print.out(cprint.toYellow('- ' + serviceTypeShort + ' ' + serviceName + ' (' + serviceKey + '): ' + serviceWarning) + '\n');
+      print.out(cprint.toYellow('- ' + serviceTypeShort + ' ' + serviceName + ' (' + serviceReference + '): ' + serviceWarning) + '\n');
     } else {
-      print.out(cprint.toWhite('- ' + serviceTypeShort + ' ' + serviceName + ' (' + serviceKey + ') took ' + serviceResponseTime + 's') + '\n');
+      print.out(cprint.toWhite('- ' + serviceTypeShort + ' ' + serviceName + ' (' + serviceReference + ') took ' + serviceResponseTime + 's') + '\n');
     }
   });
 }
