@@ -334,6 +334,10 @@ function _canConnect (in_service) {
 
   let promise = new Promise((resolve) => {
     request(requestOptions, (error, response, body) => {
+      log.verbose('Request Options: ' + utils.keyValToString(requestOptions));
+      log.verbose('Response Error: ' + error);
+      log.verbose('Response Body: ' + utils.toShortString(body));
+
       delete g_CURRENT_REQUESTS[currentRequestKey];
 
       if (error) {

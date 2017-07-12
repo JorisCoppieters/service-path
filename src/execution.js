@@ -342,6 +342,10 @@ function _executeNetworkService (in_service, in_inputs) {
         if (requestUrl.match(urlKeySubstitution)) {
           requestUrl = requestUrl.replace(urlKeySubstitution, inputValue);
         }
+
+        let requestDataKey = serviceInputType;
+        let requestDataVal = inputValue;
+        utils.setRequestData(requestData, requestDataKey, requestDataVal);
       });
     }
 

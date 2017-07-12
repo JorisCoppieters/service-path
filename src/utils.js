@@ -82,6 +82,9 @@ function toShortString (in_input) {
   if (typeof(val) !== 'string') {
     val = JSON.stringify(val);
   }
+  if (typeof(val) !== 'string') {
+    return '';
+  }
   if (val.length > 2000) {
     val = val.substr(0, 2000) + '...';
   }
