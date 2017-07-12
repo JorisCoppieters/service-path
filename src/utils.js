@@ -69,12 +69,23 @@ function isPromise (in_value) {
 function keyValToString (in_inputs) {
   let keyVals = Object.keys(in_inputs).map((key) => {
     let val = in_inputs[key] || 'NULL';
-    if (val.length > 100) {
-      val = val.substr(0, 100) + '...';
-    }
+    val = toShortString(val);
     return key + '=>' + val;
   });
   return keyVals.join(',');
+}
+
+// ******************************
+
+function toShortString (in_input) {
+  let val = in_input;
+  if (typeof(val) !== 'string') {
+    val = JSON.stringify(val);
+  }
+  if (val.length > 2000) {
+    val = val.substr(0, 2000) + '...';
+  }
+  return val;
 }
 
 // ******************************
@@ -141,6 +152,7 @@ module.exports['getResponseKeyBody'] = getResponseKeyBody;
 module.exports['getValue'] = getValue;
 module.exports['isPromise'] = isPromise;
 module.exports['keyValToString'] = keyValToString;
+module.exports['toShortString'] = toShortString;
 module.exports['runGenerator'] = runGenerator;
 module.exports['setRequestData'] = setRequestData;
 module.exports['toArray'] = toArray;

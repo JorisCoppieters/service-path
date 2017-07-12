@@ -382,7 +382,7 @@ function _executeNetworkService (in_service, in_inputs) {
       log.verbose('Request Options: ' + utils.keyValToString(requestOptions));
 
       log.verbose('Response Error: ' + error);
-      log.verbose('Response Body: ' + body);
+      log.verbose('Response Body: ' + utils.toShortString(body));
 
       if (error) {
         registry.addServiceStats({ service_key: serviceKey, error, request_options: requestOptions, response_time: responseTime });
