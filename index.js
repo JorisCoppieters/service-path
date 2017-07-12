@@ -56,6 +56,7 @@ module.exports['k_LOG_LEVEL_VERBOSE'] = log.k_LOG_LEVEL_VERBOSE;
 
 module.exports['executeServicePath'] = execution.executeServicePath;
 module.exports['getAndExecuteServicePath'] = execution.getAndExecuteServicePath;
+module.exports['printLoadTestServicePath'] = execution.printLoadTestServicePath;
 module.exports['loadTestServicePath'] = execution.loadTestServicePath;
 module.exports['getProperty'] = utils.getProperty;
 module.exports['getServicePath'] = paths.getServicePath;

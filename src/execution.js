@@ -83,9 +83,40 @@ function executeServicePath (in_servicePath, in_inputs) {
 
 // ******************************
 
-function loadTestServicePath (in_inputs, in_outputType, in_rate, in_duration, in_maxResponseTime) {
-  cprint.cyan('Testing path load at a rate of ' + in_rate + '/s for ' + in_duration + 's');
+function printLoadTestServicePath (in_inputs, in_outputType, in_rate, in_duration, in_maxResponseTime, in_doneCb) {
+  loadTestServicePath(in_inputs, in_outputType, in_rate, in_duration, in_maxResponseTime, function (in_rate, in_duration){
+    cprint.cyan('Testing path load at a rate of ' + in_rate + '/s for ' + in_duration + 's');
+  }, function (in_passCount, in_failCount, in_failAverage, in_slowestResponseTime, in_averageResponseTime, in_fastestResponseTime){
+    let message =
+      cprint.toGreen(in_passCount) + ' ' + cprint.toRed('(-' + in_failCount + ')')
+      + '   '
+      + cprint.toLightGray('Avg. Fail') + cprint.toWhite(':') + ' ' + cprint.toCyan(in_failAverage + '%') + cprint.toWhite(',') + ' '
+      + cprint.toLightGray('Worst') + cprint.toWhite(':') + ' ' + cprint.toCyan(in_slowestResponseTime + 's') + cprint.toWhite(',') + ' '
+      + cprint.toLightGray('Avg.') + cprint.toWhite(':') + ' ' + cprint.toCyan(in_averageResponseTime + 's') + cprint.toWhite(',') + ' '
+      + cprint.toLightGray('Best') + cprint.toWhite(':') + ' ' + cprint.toCyan(in_fastestResponseTime + 's') + cprint.toWhite(',');
 
+    message = (message.replace(/(\n|\r\n?)/g, ' ').trim() + ' '.repeat(500)).substr(0, 300);
+    print.out('\r' + message);
+  }, function (in_passCount, in_failCount, in_failAverage, in_slowestResponseTime, in_averageResponseTime, in_fastestResponseTime){
+    let message =
+      cprint.toGreen(in_passCount) + ' ' + cprint.toRed('(-' + in_failCount + ')')
+      + '   '
+      + cprint.toGreen('Avg. Fail') + cprint.toWhite(':') + ' ' + cprint.toCyan(in_failAverage + '%') + cprint.toWhite(',') + ' '
+      + cprint.toGreen('Worst') + cprint.toWhite(':') + ' ' + cprint.toCyan(in_slowestResponseTime + 's') + cprint.toWhite(',') + ' '
+      + cprint.toGreen('Avg.') + cprint.toWhite(':') + ' ' + cprint.toCyan(in_averageResponseTime + 's') + cprint.toWhite(',') + ' '
+      + cprint.toGreen('Best') + cprint.toWhite(':') + ' ' + cprint.toCyan(in_fastestResponseTime + 's') + cprint.toWhite(',');
+
+    message = (message.replace(/(\n|\r\n?)/g, ' ').trim() + ' '.repeat(500)).substr(0, 300);
+    print.out('\r' + message + '\n');
+    if (in_doneCb) {
+      in_doneCb();
+    }
+  });
+}
+
+// ******************************
+
+function loadTestServicePath (in_inputs, in_outputType, in_rate, in_duration, in_maxResponseTime, in_startCb, in_iterationCb, in_stopCb) {
   let rate = Math.max(1, in_rate); // Per second
   let delay = 1000 / rate;
   let iterations = rate;
@@ -94,13 +125,21 @@ function loadTestServicePath (in_inputs, in_outputType, in_rate, in_duration, in
   let slowestResponseTime = -1;
   let fastestResponseTime = -1;
   let totalResonseTime = 0;
-  let max
+  let seenLast = false;
+  let max;
 
-  let doFn = () => {
+  if (in_startCb) {
+    in_startCb(in_rate, in_duration);
+  }
+
+  let doFn = (last) => {
     let startDate = new Date();
     let inputs = _cleanInputs(in_inputs);
     paths.getServicePath(Object.keys(inputs), in_outputType).then((servicePath) => {
       _executeServicePathNode(clone(servicePath).reverse(), clone(inputs)).then((result) => {
+        if (!last && seenLast) {
+          return;
+        }
 
         let responseTime = (new Date() - startDate) / 1000;
         if (!result || (result.length && result[0] === undefined)) {
@@ -125,33 +164,32 @@ function loadTestServicePath (in_inputs, in_outputType, in_rate, in_duration, in
 
         let averageResponseTime = Math.round(totalResonseTime/totalCount * 1000) / 1000;
         let failAverage = Math.round(failCount/totalCount * 1000) / 10;
-
-        let message =
-          cprint.toGreen(passCount) + ' ' + cprint.toRed('(-' + failCount + ')')
-          + '   '
-          + cprint.toGreen('Avg. Fail') + cprint.toWhite(':') + ' ' + cprint.toCyan(failAverage + '%') + cprint.toWhite(',') + ' '
-          + cprint.toGreen('Worst') + cprint.toWhite(':') + ' ' + cprint.toCyan(slowestResponseTime + 's') + cprint.toWhite(',') + ' '
-          + cprint.toGreen('Avg.') + cprint.toWhite(':') + ' ' + cprint.toCyan(averageResponseTime + 's') + cprint.toWhite(',') + ' '
-          + cprint.toGreen('Best') + cprint.toWhite(':') + ' ' + cprint.toCyan(fastestResponseTime + 's') + cprint.toWhite(',');
-
-        message = (message.replace(/(\n|\r\n?)/g, ' ').trim() + ' '.repeat(500)).substr(0, 300);
-        print.out('\r' + message);
+        if (in_iterationCb) {
+          if (last) {
+            seenLast = true;
+            in_stopCb(passCount, failCount, failAverage, slowestResponseTime, averageResponseTime, fastestResponseTime);
+          } else {
+            in_iterationCb(passCount, failCount, failAverage, slowestResponseTime, averageResponseTime, fastestResponseTime);
+          }
+        }
       });
     });
   };
 
-  var loopFn = (idx) => {
-     setTimeout(function () {
-        doFn();
-        if (--idx > 0) loopFn(idx);
-     }, delay)
+  var loopFn = (idx, lastLoop) => {
+    let lastIteration = lastLoop && idx === 1;
+    setTimeout(function () {
+      doFn(lastIteration);
+      if (--idx > 0) loopFn(idx, lastLoop);
+    }, delay)
   };
 
   let loopCount = 0;
   while(loopCount++ < in_duration) {
+    let lastLoop = loopCount >= in_duration;
     setTimeout(function () {
-        loopFn(iterations);
-     }, 1000 * (loopCount-1))
+      loopFn(iterations, lastLoop);
+    }, 1000 * (loopCount-1))
   }
 }
 
@@ -476,5 +514,6 @@ function _cleanInputs (in_inputs) {
 module.exports['getAndExecuteServicePath'] = getAndExecuteServicePath;
 module.exports['executeServicePath'] = executeServicePath;
 module.exports['loadTestServicePath'] = loadTestServicePath;
+module.exports['printLoadTestServicePath'] = printLoadTestServicePath;
 
 // ******************************
