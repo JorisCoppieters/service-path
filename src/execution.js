@@ -30,6 +30,7 @@ let utils = require('./utils');
 // ******************************
 
 let g_CURRENT_REQUESTS = {};
+let g_RANDOM_DATA = {};
 
 // ******************************
 // Functions:
@@ -135,14 +136,23 @@ function loadTestServicePath (in_inputs, in_outputType, in_rate, in_duration, in
   let doFn = (last) => {
     let startDate = new Date();
     let inputs = _cleanInputs(in_inputs);
+    registry.clearDisabledServices();
     paths.getServicePath(Object.keys(inputs), in_outputType).then((servicePath) => {
       _executeServicePathNode(clone(servicePath).reverse(), clone(inputs)).then((result) => {
         if (!last && seenLast) {
           return;
         }
 
+        let output;
+        if (result) {
+          output = result[in_outputType];
+          if (output && output.length && output[0] === undefined) {
+            output = undefined;
+          }
+        }
+
         let responseTime = (new Date() - startDate) / 1000;
-        if (!result || (result.length && result[0] === undefined)) {
+        if (!output) {
           failCount++;
         } else if (responseTime > in_maxResponseTime) {
           failCount++;
@@ -216,7 +226,10 @@ function _executeServicePathNode (in_servicePath, in_availableInputs, in_lastOut
     servicePathNodeRequests.push(_executeServiceAndPopulateInputs(servicePath, servicePathNode, availableInputs));
   });
 
-  return Promise.all(servicePathNodeRequests);
+  return Promise.all(servicePathNodeRequests)
+    .then((result) => {
+      return Promise.resolve(in_availableInputs);
+    });
 }
 
 // ******************************
@@ -499,8 +512,24 @@ function _executeFunctionService (in_service, in_inputs) {
 
 function _cleanInputs (in_inputs) {
   let cleanInputs = {};
-  Object.keys(in_inputs).forEach((inputKey) => {
+
+  let randomPrimaryKey = Object.keys(in_inputs).filter(inputKey => in_inputs[inputKey] === '%RANDOM_PRIMARY%').find(inputKey => true);
+  let randomSecondaryKeys = Object.keys(in_inputs).filter(inputKey => in_inputs[inputKey] === '%RANDOM_SECONDARY%');
+
+  if (randomPrimaryKey && randomSecondaryKeys) {
+    let randomInputs = _getRandomGroupInputValues(randomPrimaryKey, randomSecondaryKeys);
+    Object.keys(randomInputs).forEach(inputKey => {
+      in_inputs[inputKey] = randomInputs[inputKey];
+    });
+  }
+
+  Object.keys(in_inputs).forEach(inputKey => {
     if (in_inputs[inputKey] === undefined) {
+      return;
+    }
+    if (in_inputs[inputKey] === '%RANDOM%') {
+      let randomValue = _getRandomInputValue(inputKey);
+      cleanInputs[inputKey] = randomValue;
       return;
     }
     cleanInputs[inputKey] = in_inputs[inputKey];
@@ -512,9 +541,60 @@ function _cleanInputs (in_inputs) {
 }
 
 // ******************************
+
+function _getRandomInputValue (in_inputKey) {
+  let randomDataKey = in_inputKey.toUpperCase();
+  let randomData = g_RANDOM_DATA[randomDataKey];
+  if (!randomData) {
+    return 'NULL';
+  }
+
+  let randomIdx = Math.floor(Math.random() * randomData.length);
+  return randomData[randomIdx];
+}
+
+// ******************************
+
+function _getRandomInputLookupValue (in_inputKey, in_lookupKey, in_lookupValue) {
+  let randomDataKey = in_inputKey.toUpperCase() + '->' + in_lookupKey.toUpperCase();
+  let randomData = g_RANDOM_DATA[randomDataKey];
+  if (!randomData || !randomData[in_lookupValue]) {
+    return 'NULL';
+  }
+
+  return randomData[in_lookupValue];
+}
+
+// ******************************
+
+function _getRandomGroupInputValues (in_primaryInputKey, in_secondaryInputKeys) {
+  let groupValues = {};
+  let primaryRandomValue = _getRandomInputValue(in_primaryInputKey);
+  if (primaryRandomValue) {
+    groupValues[in_primaryInputKey] = primaryRandomValue;
+
+    in_secondaryInputKeys.forEach(key => {
+      let secondaryLookupValue = _getRandomInputLookupValue(in_primaryInputKey, key, primaryRandomValue);
+      if (secondaryLookupValue) {
+        groupValues[key] = secondaryLookupValue;
+      }
+    });
+  }
+
+  return groupValues;
+}
+
+// ******************************
+
+function setRandomData (in_key, in_data) {
+  g_RANDOM_DATA[in_key] = in_data;
+}
+
+// ******************************
 // Exports:
 // ******************************
 
+module.exports['setRandomData'] = setRandomData;
 module.exports['getAndExecuteServicePath'] = getAndExecuteServicePath;
 module.exports['executeServicePath'] = executeServicePath;
 module.exports['loadTestServicePath'] = loadTestServicePath;

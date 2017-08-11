@@ -55,6 +55,18 @@ function main () {
     service_functions: require('./service_registry/service_functions'),
   });
 
+  servicePath.setRandomData('KEYWORDS',
+    [
+      'book','bottle','mitten','plant','scissors'
+    ]
+  );
+
+  servicePath.setRandomData('KEYWORDS->CATEGORY_ID',
+    {
+      book:4537,bottle:2890,mitten:6465,plant:4212,scissors:3033
+    }
+  );
+
   if (load_test) {
     testLoad(keywords, imageFile, categoryId, title, rate, duration);
   } else {
