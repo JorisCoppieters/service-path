@@ -12,12 +12,30 @@
 // Functions:
 // ******************************
 
-function setRequestData (in_request, in_requestKey, in_requestValue) {
+function setRequestData (in_request, in_requestKey, in_requestValue, in_requestValueType) {
+  let requestValue = in_requestValue;
+  switch (in_requestValueType)
+  {
+    case 'int':
+      requestValue = parseInt(requestValue);
+      break;
+
+    case 'float':
+    case 'number':
+      requestValue = parseFloat(requestValue);
+      break;
+
+    case 'bool':
+    case 'boolean':
+      requestValue = (['true', '1'].indexOf((requestValue + "").toLowerCase()) >= 0);
+      break;
+  }
+
   let requestDataObj = in_request;
   let requestDataKeyParts = in_requestKey.split('->');
   requestDataKeyParts.forEach((requestDataKeyPart, idx) => {
     if (idx === requestDataKeyParts.length - 1) {
-      requestDataObj[requestDataKeyPart] = in_requestValue;
+      requestDataObj[requestDataKeyPart] = requestValue;
     } else {
       requestDataObj[requestDataKeyPart] = requestDataObj[requestDataKeyPart] || {};
       requestDataObj = requestDataObj[requestDataKeyPart];

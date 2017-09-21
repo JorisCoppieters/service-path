@@ -346,7 +346,8 @@ function _executeNetworkService (in_service, in_inputs) {
         let requestDataInput = utils.getProperty(serviceRequestData, serviceInputType, []);
         let requestDataKey = utils.getProperty(requestDataInput, 'key', serviceInputType);
         let requestDataVal = utils.getProperty(requestDataInput, 'val', inputValue);
-        utils.setRequestData(requestData, requestDataKey, requestDataVal);
+        let requestDataValType = utils.getProperty(requestDataInput, 'type', 'string');
+        utils.setRequestData(requestData, requestDataKey, requestDataVal, requestDataValType);
       });
     } else {
       serviceInputTypes.forEach((serviceInputType) => {
@@ -358,7 +359,7 @@ function _executeNetworkService (in_service, in_inputs) {
 
         let requestDataKey = serviceInputType;
         let requestDataVal = inputValue;
-        utils.setRequestData(requestData, requestDataKey, requestDataVal);
+        utils.setRequestData(requestData, requestDataKey, requestDataVal, requestDataValType);
       });
     }
 
