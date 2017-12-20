@@ -359,6 +359,7 @@ function _executeNetworkService (in_service, in_inputs) {
 
         let requestDataKey = serviceInputType;
         let requestDataVal = inputValue;
+        let requestDataValType = 'string';
         utils.setRequestData(requestData, requestDataKey, requestDataVal, requestDataValType);
       });
     }
