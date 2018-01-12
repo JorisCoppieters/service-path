@@ -13,13 +13,13 @@
 // ******************************
 
 function clearLine () {
-  out('\r' + ' '.repeat(100) + '\r');
+    out('\r' + ' '.repeat(100) + '\r');
 }
 
 // ******************************
 
 function out (in_string) {
-  process.stdout.write(in_string);
+    process.stdout.write(in_string);
 }
 
 // ******************************

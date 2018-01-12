@@ -19,20 +19,20 @@ let g_TIMERS = {};
 // ******************************
 
 function startTimer (in_timerKey) {
-  g_TIMERS[in_timerKey] = new Date().getTime();
+    g_TIMERS[in_timerKey] = new Date().getTime();
 }
 
 // ******************************
 
 function stopTimer (in_timerKey) {
-  let startDate = g_TIMERS[in_timerKey];
-  return (new Date().getTime() - startDate) / 1000;
+    let startDate = g_TIMERS[in_timerKey];
+    return (new Date().getTime() - startDate) / 1000;
 }
 
 // ******************************
 
 function clearTimer (in_timerKey) {
-  delete g_TIMERS[in_timerKey];
+    delete g_TIMERS[in_timerKey];
 }
 
 // ******************************

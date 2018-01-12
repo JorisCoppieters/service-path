@@ -37,79 +37,79 @@ let g_LOG_SINGLE_LINE = false;
 // ******************************
 
 function setLogLevel (in_logLevel) {
-  g_LOG_LEVEL = in_logLevel;
+    g_LOG_LEVEL = in_logLevel;
 }
 
 // ******************************
 
 function getLogLevel () {
-  return g_LOG_LEVEL;
+    return g_LOG_LEVEL;
 }
 
 // ******************************
 
 function setLogSingleLine (in_logSingleLine) {
-  g_LOG_SINGLE_LINE = in_logSingleLine;
+    g_LOG_SINGLE_LINE = in_logSingleLine;
 }
 
 // ******************************
 
 function getLogSingleLine () {
-  return g_LOG_LEVEL;
+    return g_LOG_LEVEL;
 }
 
 // ******************************
 
 function logError (in_message) {
-  if (g_LOG_LEVEL >= k_LOG_LEVEL_ERROR) {
-    print.clearLine();
-    print.out(cprint.toRed('ERROR: ' + _formatLogMessage(in_message)));
-  }
+    if (g_LOG_LEVEL >= k_LOG_LEVEL_ERROR) {
+        print.clearLine();
+        print.out(cprint.toRed('ERROR: ' + _formatLogMessage(in_message)));
+    }
 }
 
 // ******************************
 
 function logWarning (in_message) {
-  if (g_LOG_LEVEL >= k_LOG_LEVEL_WARNING) {
-    print.clearLine();
-    print.out(cprint.toYellow('WARNING: ' + _formatLogMessage(in_message)));
-  }
+    if (g_LOG_LEVEL >= k_LOG_LEVEL_WARNING) {
+        print.clearLine();
+        print.out(cprint.toYellow('WARNING: ' + _formatLogMessage(in_message)));
+    }
 }
 
 // ******************************
 
 function logSuccess (in_message) {
-  if (g_LOG_LEVEL >= k_LOG_LEVEL_SUCCESS) {
-    print.clearLine();
-    print.out(cprint.toGreen('SUCCESS: ' + _formatLogMessage(in_message)));
-  }
+    if (g_LOG_LEVEL >= k_LOG_LEVEL_SUCCESS) {
+        print.clearLine();
+        print.out(cprint.toGreen('SUCCESS: ' + _formatLogMessage(in_message)));
+    }
 }
 
 // ******************************
 
 function logInfo (in_message) {
-  if (g_LOG_LEVEL >= k_LOG_LEVEL_INFO) {
-    print.clearLine();
-    print.out(cprint.toCyan('INFO: ' + _formatLogMessage(in_message)));
-  }
+    if (g_LOG_LEVEL >= k_LOG_LEVEL_INFO) {
+        print.clearLine();
+        print.out(cprint.toCyan('INFO: ' + _formatLogMessage(in_message)));
+    }
 }
 
 // ******************************
 
 function logVerbose (in_message) {
-  if (g_LOG_LEVEL >= k_LOG_LEVEL_VERBOSE) {
-    print.clearLine();
-    print.out(cprint.toWhite('VERBOSE: ' + _formatLogMessage(in_message)));
-  }
+    if (g_LOG_LEVEL >= k_LOG_LEVEL_VERBOSE) {
+        print.clearLine();
+        print.out(cprint.toWhite('VERBOSE: ' + _formatLogMessage(in_message)));
+    }
 }
 
 // ******************************
 
 function _formatLogMessage (in_message) {
-  if (!g_LOG_SINGLE_LINE) {
-    return in_message + '\n';
-  }
-  return '\r' + in_message.replace(/(\n|\r\n?)/g, ' ').trim().substr(0, 100);
+    if (!g_LOG_SINGLE_LINE) {
+        return in_message + '\n';
+    }
+    return '\r' + in_message.replace(/(\n|\r\n?)/g, ' ').trim().substr(0, 100);
 }
 
 // ******************************

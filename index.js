@@ -19,29 +19,22 @@
 
 let execution = require('./src/execution');
 let log = require('./src/log');
-let print = require('./src/print');
 let printInfo = require('./src/printInfo');
 let registry = require('./src/registry');
 let utils = require('./src/utils');
 let paths = require('./src/paths');
 
 // ******************************
-// Constants:
-// ******************************
-
-const k_VERSION = '0.1.27';
-
-// ******************************
 // Functions:
 // ******************************
 
 function setup (config) {
-  config = config || {};
+    config = config || {};
 
-  log.setLogLevel(utils.getProperty(config, 'log_level', log.k_LOG_LEVEL_WARNING));
-  log.setLogSingleLine(utils.getProperty(config, 'log_single_line', false));
-  registry.setRegistry(utils.getProperty(config, 'service_registry', {}));
-  registry.setFunctions(utils.getProperty(config, 'service_functions', {}));
+    log.setLogLevel(utils.getProperty(config, 'log_level', log.k_LOG_LEVEL_WARNING));
+    log.setLogSingleLine(utils.getProperty(config, 'log_single_line', false));
+    registry.setRegistry(utils.getProperty(config, 'service_registry', {}));
+    registry.setFunctions(utils.getProperty(config, 'service_functions', {}));
 }
 
 // ******************************
