@@ -29,11 +29,43 @@ const k_LOG_LEVEL_VERBOSE = 5;
 // Globals:
 // ******************************
 
+let defaultLogger = {
+    error: (in_message) => {
+        print.clearLine();
+        print.out(cprint.toRed('ERROR: ' + _formatLogMessage(in_message)));
+    },
+    warning: (in_message) => {
+        print.clearLine();
+        print.out(cprint.toYellow('WARNING: ' + _formatLogMessage(in_message)));
+    },
+    success: (in_message) => {
+        print.clearLine();
+        print.out(cprint.toGreen('SUCCESS: ' + _formatLogMessage(in_message)));
+    },
+    info: (in_message) => {
+        print.clearLine();
+        print.out(cprint.toCyan('INFO: ' + _formatLogMessage(in_message)));
+    },
+    verbose: (in_message) => {
+        print.clearLine();
+        print.out(cprint.toWhite('VERBOSE: ' + _formatLogMessage(in_message)));
+    }
+};
+
+// ******************************
+
 let g_LOG_LEVEL = k_LOG_LEVEL_SUCCESS;
 let g_LOG_SINGLE_LINE = false;
+let g_LOGGER = defaultLogger;
 
 // ******************************
 // Functions:
+// ******************************
+
+function setLogger (in_logger) {
+    g_LOGGER = in_logger || defaultLogger;
+}
+
 // ******************************
 
 function setLogLevel (in_logLevel) {
@@ -62,8 +94,7 @@ function getLogSingleLine () {
 
 function logError (in_message) {
     if (g_LOG_LEVEL >= k_LOG_LEVEL_ERROR) {
-        print.clearLine();
-        print.out(cprint.toRed('ERROR: ' + _formatLogMessage(in_message)));
+        g_LOGGER.error(in_message);
     }
 }
 
@@ -71,8 +102,7 @@ function logError (in_message) {
 
 function logWarning (in_message) {
     if (g_LOG_LEVEL >= k_LOG_LEVEL_WARNING) {
-        print.clearLine();
-        print.out(cprint.toYellow('WARNING: ' + _formatLogMessage(in_message)));
+        g_LOGGER.warning(in_message);
     }
 }
 
@@ -80,8 +110,7 @@ function logWarning (in_message) {
 
 function logSuccess (in_message) {
     if (g_LOG_LEVEL >= k_LOG_LEVEL_SUCCESS) {
-        print.clearLine();
-        print.out(cprint.toGreen('SUCCESS: ' + _formatLogMessage(in_message)));
+        g_LOGGER.success(in_message);
     }
 }
 
@@ -89,8 +118,7 @@ function logSuccess (in_message) {
 
 function logInfo (in_message) {
     if (g_LOG_LEVEL >= k_LOG_LEVEL_INFO) {
-        print.clearLine();
-        print.out(cprint.toCyan('INFO: ' + _formatLogMessage(in_message)));
+        g_LOGGER.info(in_message);
     }
 }
 
@@ -98,8 +126,7 @@ function logInfo (in_message) {
 
 function logVerbose (in_message) {
     if (g_LOG_LEVEL >= k_LOG_LEVEL_VERBOSE) {
-        print.clearLine();
-        print.out(cprint.toWhite('VERBOSE: ' + _formatLogMessage(in_message)));
+        g_LOGGER.verbose(in_message);
     }
 }
 
@@ -126,6 +153,7 @@ module.exports['error'] = logError;
 module.exports['info'] = logInfo;
 module.exports['logLevel'] = getLogLevel;
 module.exports['logSingleLine'] = getLogSingleLine;
+module.exports['setLogger'] = setLogger;
 module.exports['setLogLevel'] = setLogLevel;
 module.exports['setLogSingleLine'] = setLogSingleLine;
 module.exports['success'] = logSuccess;

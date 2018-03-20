@@ -31,6 +31,7 @@ let paths = require('./src/paths');
 function setup (config) {
     config = config || {};
 
+    log.setLogger(utils.getProperty(config, 'logger', false));
     log.setLogLevel(utils.getProperty(config, 'log_level', log.k_LOG_LEVEL_WARNING));
     log.setLogSingleLine(utils.getProperty(config, 'log_single_line', false));
     registry.setRegistry(utils.getProperty(config, 'service_registry', {}));

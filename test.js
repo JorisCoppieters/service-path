@@ -167,7 +167,7 @@ function printSuggestions (in_keywords, in_imageFile, in_categoryId, in_title) {
 // ******************************
 
 function printLine (in_line) {
-    process.stdout.write(in_line + '\n');
+    process.stdout.write((in_line ? in_line : '') + '\n');
 }
 
 // ******************************
