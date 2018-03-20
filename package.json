@@ -1,6 +1,6 @@
 {
   "name": "service-path",
-  "version": "0.1.27",
+  "version": "0.1.28",
   "description": "A library for traversing optimal service paths in a service registry",
   "main": "index.js",
   "scripts": {
