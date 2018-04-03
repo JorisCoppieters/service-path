@@ -161,7 +161,7 @@ And we also say the service ```type``` is ```network```
 
 The API will return an object like:
 
-```json
+```sh
 {
     results: [...]
 }
@@ -215,7 +215,7 @@ module.exports['recipe__to__recipe_title'] = (recipe) => {
 
 And lets register them in example_registry.json
 
-```json
+```sh
 {
     ...
     "recipes__to__recipe": {
@@ -255,136 +255,6 @@ Now when you execute the script you'll get back the the title for the first reci
 ```sh
 Magic  Prime Rib Recipe
 ```
-
-### A graph with a multiple services
-
-The point of service-path is to tie service inputs and outputs together to achieve a desired output. So in this example we'll combine two network service and a couple of function services to achieve a localized greeting for a given name. So if provide a ```name``` .e.g ```Sebastian```
-
-```json
-{
-    "recipes": {
-        "address": "http://www.recipepuppy.com",
-        "input": "ingredient",
-        "output": "recipes",
-        "output_api_path": "api",
-        "output_timeout": 5000,
-        "request_data": {
-            "ingredient" : {
-                "key": "i"
-            }
-        },
-        "request_type": "GET",
-        "response_key": "results",
-        "type": "network"
-    }
-}
-```
-
-We have added a new network service that takes ```ingredient``` as an input and provides ```recipes``` as an output.
-
-The full API path that will need to be executed underneath is ```http://www.recipepuppy.com/api?i={ingredient}```, which is configured via ```address```, ```output_api_path``` and the ```request_data``` map.
-
-It is a ```GET``` request as configured in ```request_type``` with a ```output_timeout``` of 5s.
-
-And we also say the service ```type``` is ```network```
-
-The API will return an object like:
-
-```json
-{
-    results: [...]
-}
-```
-
-We are interested in the results array, so we also configure the service ```response_key``` to be ```results```
-
-Now to set up service path:
-
-```js
-const servicePath = require('service-path');
-
-servicePath.setup({
-    service_registry: require('./example_registry.json')
-});
-
-let inputs = {
-    ingredient: 'beef'
-};
-
-let outputType = 'recipes';
-
-servicePath.getAndExecuteServicePath(inputs, outputType)
-    .then((output) => {
-        console.log(output);
-    });
-```
-
-When you execute the script it just will return the collection of recipes:
-```sh
-[ { title: 'Magic  Prime Rib Recipe',
-    href: 'http://www.recipezaar.com/Magic-Prime-Rib-Recipe-126865',
-    ingredients: 'beef',
-    thumbnail: 'http://img.recipepuppy.com/350074.jpg' },
-...
-```
-
-If we want just the first recipe title to come back, we can add some new services to service-path, one that converts ```recipes``` into ```recipe``` and one that converts ```recipe``` into ```title```
-
-Lets add an example_functions.js file again to create these services:
-
-```js
-module.exports['recipes__to__recipe'] = (recipes) => {
-    return recipes[0]; // Just return the first one in the collection
-}
-
-module.exports['recipe__to__recipe_title'] = (recipe) => {
-    return recipe['title']; // Return the title field in recipe
-}
-```
-
-And lets register them in example_registry.json
-
-```json
-{
-    ...
-    "recipes__to__recipe": {
-        "type": "function",
-        "input": "recipes",
-        "output": "recipe"
-    },
-    "recipe__to__recipe_title": {
-        "type": "function",
-        "input": "recipe",
-        "output": "recipe_title"
-    }
-}
-
-```
-
-Add ```example_functions``` in the setup file
-
-```js
-...
-servicePath.setup({
-    service_registry: require('./example_registry.json'),
-    service_functions: require('./example_functions.js') // <---
-});
-...
-```
-
-And set the output to ```recipe_title```
-
-```js
-...
-let outputType = 'recipe_title';
-...
-```
-
-Now when you execute the script you'll get back the the title for the first recipe:
-```sh
-Magic  Prime Rib Recipe
-```
-
 
 # Todos
 * Still more documentation to come
