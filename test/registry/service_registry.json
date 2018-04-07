@@ -1,0 +1,26 @@
+{
+    "imageUrl__to__imageStream": {
+        "accuracy": 100,
+        "input": "imageUrl",
+        "output": "imageStream",
+        "type": "function"
+    },
+    "imageStream__to__paddedImageStream": {
+        "accuracy": 100,
+        "input": "imageStream",
+        "output": "paddedImageStream",
+        "type": "function"
+    },
+    "imageStream__to__unpaddedImageStream": {
+        "accuracy": 100,
+        "input": "imageStream",
+        "output": "unpaddedImageStream",
+        "type": "function"
+    },
+    "imageUrl__to__ascii": {
+        "accuracy": 100,
+        "input": "imageUrl",
+        "output": "ascii",
+        "type": "function"
+    }
+}

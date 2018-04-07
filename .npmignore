@@ -1,2 +1,1 @@
-node_modules/*
-service_registry/*
+**/node_modules/*
