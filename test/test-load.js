@@ -66,7 +66,7 @@ function testLoad (in_rate, in_duration) {
     let output = 'ascii';
 
     let inputs = {
-        imageUrl: 'https://www.noelleeming.co.nz/shop/renderImage.image\?imageName\=products%2F153%2F153233.jpg'
+        imageUrl: 'https://www.noelleeming.co.nz/shop/renderImage.image?imageName=products%2F153%2F153233.jpg'
     };
 
     let maxResponseTime = 1000;

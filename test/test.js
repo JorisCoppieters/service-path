@@ -12,6 +12,7 @@ let minimist = require('minimist');
 // ******************************
 
 let g_ARGV = minimist(process.argv.slice(2));
+let stats = g_ARGV['stats'];
 
 // ******************************
 // Setup:
@@ -42,7 +43,9 @@ servicePath.clearServicePathsUsed();
 servicePath.clearDisabledServices();
 servicePath.getAndExecuteServicePath(inputs, outputType, 1).then(output => {
     printLine(output);
-    printStats();
+    if (stats) {
+        printStats();
+    }
 });
 
 // ******************************

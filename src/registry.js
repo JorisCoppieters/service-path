@@ -37,6 +37,7 @@ let g_SERVICE_STATS = [];
 
 function setRegistry (in_serviceRegistry) {
     g_SERVICE_REGISTRY = _convertServicesRegistry(in_serviceRegistry);
+    _generateDefaultServiceFunctions();
 }
 
 // ******************************
@@ -54,7 +55,7 @@ function clearRegistryChanged () {
 // ******************************
 
 function setFunctions (in_serviceFunctions) {
-    g_SERVICE_FUNCTIONS = in_serviceFunctions;
+    g_SERVICE_FUNCTIONS = Object.assign({}, g_SERVICE_FUNCTIONS, in_serviceFunctions);
 }
 
 // ******************************
@@ -139,11 +140,49 @@ function _convertServicesRegistry (in_serviceRegistry) {
                 break;
             }
 
+            service['input'] = service['input'] || service['inputs'];
+
             convertedServicesRegistry[serviceKey] = service;
         });
     });
 
     return convertedServicesRegistry;
+}
+
+// ******************************
+
+function _generateDefaultServiceFunctions() {
+    Object.keys(g_SERVICE_REGISTRY).forEach((serviceKey) => {
+        let service = g_SERVICE_REGISTRY[serviceKey];
+        if (service.type != 'function') {
+            return;
+        }
+
+        let serviceFn = g_SERVICE_FUNCTIONS[service.function];
+        if (serviceFn) {
+            return;
+        }
+
+        let inputs = utils.toArray(utils.getProperty(service, 'input', []));
+        let output = utils.getProperty(service, 'output');
+
+        if (!inputs[0] || !output) {
+            return;
+        }
+
+        let matchingFunctionRegEx = new RegExp('(.*)==(.*)');
+        let matchingFunctionRegExValues = service.function.match(matchingFunctionRegEx);
+        if (matchingFunctionRegExValues) {
+            serviceFn = (input) => {
+                return (input===matchingFunctionRegExValues[2]) ? matchingFunctionRegExValues[2] : null;
+            };
+        } else {
+            serviceFn = (input) => {
+                return input;
+            };
+        }
+        g_SERVICE_FUNCTIONS[service.function] = serviceFn;
+    });
 }
 
 // ******************************

@@ -1,26 +1,65 @@
 {
     "imageUrl__to__imageStream": {
-        "accuracy": 100,
         "input": "imageUrl",
         "output": "imageStream",
         "type": "function"
     },
     "imageStream__to__paddedImageStream": {
-        "accuracy": 100,
         "input": "imageStream",
         "output": "paddedImageStream",
         "type": "function"
     },
     "imageStream__to__unpaddedImageStream": {
-        "accuracy": 100,
         "input": "imageStream",
         "output": "unpaddedImageStream",
         "type": "function"
     },
     "imageUrl__to__ascii": {
-        "accuracy": 100,
         "input": "imageUrl",
         "output": "ascii",
+        "type": "function"
+    },
+
+    "keyword__to__name": {
+        "input": "keyword",
+        "output": "name",
+        "type": "function"
+    },
+
+    "name__to__species": {
+        "input": "name",
+        "output": "species",
+        "type": "function"
+    },
+
+    "species==mammal": {
+        "input": "species",
+        "output": "species==mammal",
+        "type": "function"
+    },
+
+    "species==reptile": {
+        "input": "species",
+        "output": "species==reptile",
+        "type": "function"
+    },
+
+    "mammal__to__description": {
+        "inputs": [
+            "species==mammal",
+            "legs",
+            "arms"
+        ],
+        "output": "description",
+        "type": "function"
+    },
+    "reptile__to__description": {
+        "inputs": [
+            "species==reptile",
+            "legs",
+            "arms"
+        ],
+        "output": "description",
         "type": "function"
     }
 }

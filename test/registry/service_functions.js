@@ -38,3 +38,21 @@ module.exports['imageUrl__to__ascii'] = (imageUrl) => {
         });
     });
 };
+
+module.exports['name__to__species'] = (name) => {
+    name = name.trim().toLowerCase();
+
+    if (['elephant', 'whale'].indexOf(name) >= 0) {
+        return 'mammal';
+    }
+    if (['snake', 'crocodile'].indexOf(name) >= 0) {
+        return 'reptile';
+    }
+    return 'dinosaur';
+};
+module.exports['mammal__to__description'] = (mammal, arms, legs) => {
+    return `I have ${arms} arms and ${legs} legs`;
+};
+module.exports['reptile__to__description'] = (reptile, arms, legs) => {
+    return `I am dangerous with my ${arms} arms and ${legs} legs`;
+};
