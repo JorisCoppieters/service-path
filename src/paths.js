@@ -12,11 +12,11 @@
 // Requires:
 // ******************************
 
-let Promise = require('bluebird');
+const Promise = require('bluebird');
 
-let log = require('./log');
-let registry = require('./registry');
-let utils = require('./utils');
+const log = require('./log');
+const registry = require('./registry');
+const utils = require('./utils');
 
 // ******************************
 // Globals:

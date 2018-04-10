@@ -17,12 +17,12 @@
 // Requires:
 // ******************************
 
-let execution = require('./src/execution');
-let log = require('./src/log');
-let printInfo = require('./src/printInfo');
-let registry = require('./src/registry');
-let utils = require('./src/utils');
-let paths = require('./src/paths');
+const execution = require('./src/execution');
+const log = require('./src/log');
+const printInfo = require('./src/printInfo');
+const registry = require('./src/registry');
+const utils = require('./src/utils');
+const paths = require('./src/paths');
 
 // ******************************
 // Functions:
@@ -42,6 +42,7 @@ function setup (config) {
 // Exports:
 // ******************************
 
+module.exports['k_LOG_LEVEL_NONE'] = log.k_LOG_LEVEL_NONE;
 module.exports['k_LOG_LEVEL_ERROR'] = log.k_LOG_LEVEL_ERROR;
 module.exports['k_LOG_LEVEL_WARNING'] = log.k_LOG_LEVEL_WARNING;
 module.exports['k_LOG_LEVEL_SUCCESS'] = log.k_LOG_LEVEL_SUCCESS;
@@ -59,7 +60,7 @@ module.exports['getServicePathsUsed'] = paths.getServicePathsUsed;
 module.exports['clearServicePathsUsed'] = paths.clearServicePathsUsed;
 module.exports['getServiceStats'] = registry.getServiceStats;
 module.exports['clearServiceStats'] = registry.clearServiceStats;
-module.exports['clearDisabledServices'] = registry.clearDisabledServices;
+module.exports['clearAllDisabledServices'] = registry.clearAllDisabledServices;
 module.exports['getValue'] = utils.getValue;
 module.exports['printServicePathsUsed'] = printInfo.servicePathsUsed;
 module.exports['getServicePathsUsedHTML'] = printInfo.getServicePathsUsedHTML;

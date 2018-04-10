@@ -12,19 +12,18 @@
 // Requires:
 // ******************************
 
-let minimist = require('minimist');
-let servicePath = require('../index.js');
+const servicePath = require('../index.js');
 
 // ******************************
 // Script Args:
 // ******************************
 
-let _ARGV = minimist(process.argv.slice(2));
+let _ARGV = require('minimist')(process.argv.slice(2));
 
 let verbose = _ARGV['verbose'];
 let info = _ARGV['info'];
 let multi_line = _ARGV['multi-line'];
-let rate = _ARGV['rate'] || 100;
+let rate = _ARGV['rate'] || 10;
 let duration = _ARGV['duration'] || 1;
 
 // ******************************

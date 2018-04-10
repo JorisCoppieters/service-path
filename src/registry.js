@@ -12,12 +12,10 @@
 // Requires:
 // ******************************
 
-let clone = require('clone');
-let Promise = require('bluebird');
-let request = require('request');
+const Promise = require('bluebird');
 
-let log = require('./log');
-let utils = require('./utils');
+const log = require('./log');
+const utils = require('./utils');
 
 // ******************************
 // Globals:
@@ -66,16 +64,59 @@ function getFunction (in_functionName) {
 
 // ******************************
 
-function disableService (in_serviceKey) {
+function pauseService (in_serviceKey) {
     let now = new Date().getTime();
 
     g_REGISTRY_CHANGED = true;
-    g_DISABLE_SERVICES[in_serviceKey] = { expiry: now + 1000 * 60, disabled: true };
+    g_DISABLE_SERVICES[in_serviceKey] = { expiry: now + 1000 * 60, paused: true };
 }
 
 // ******************************
 
-function clearDisabledServices () {
+function ignoreService (in_serviceKey) {
+    g_REGISTRY_CHANGED = true;
+    g_DISABLE_SERVICES[in_serviceKey] = { ignore: true, paused: true };
+}
+
+// ******************************
+
+function clearPausedServices () {
+    g_DISABLE_SERVICES = (Object.keys(g_DISABLE_SERVICES || {}) || [])
+        .map(serviceKey => {
+            let disabledServiceData = g_DISABLE_SERVICES[serviceKey];
+            disabledServiceData.serviceKey = serviceKey;
+            return disabledServiceData;
+        })
+        .filter(disabledServiceData => !disabledServiceData.paused)
+        .reduce((disabledServiceData, pausedServices) => {
+            let serviceKey = disabledServiceData.serviceKey;
+            delete disabledServiceData.serviceKey;
+            pausedServices[serviceKey] = disabledServiceData;
+            return pausedServices;
+        }, []);
+}
+
+// ******************************
+
+function clearIgnoredServices () {
+    g_DISABLE_SERVICES = (Object.keys(g_DISABLE_SERVICES || {}) || [])
+        .map(serviceKey => {
+            let disabledServiceData = g_DISABLE_SERVICES[serviceKey];
+            disabledServiceData.serviceKey = serviceKey;
+            return disabledServiceData;
+        })
+        .filter(disabledServiceData => !disabledServiceData.ignore)
+        .reduce((disabledServiceData, pausedServices) => {
+            let serviceKey = disabledServiceData.serviceKey;
+            delete disabledServiceData.serviceKey;
+            pausedServices[serviceKey] = disabledServiceData;
+            return pausedServices;
+        }, []);
+}
+
+// ******************************
+
+function clearAllDisabledServices () {
     g_DISABLE_SERVICES = {};
 }
 
@@ -90,6 +131,8 @@ function getService (in_serviceKey) {
 function getServices (in_inputTypes, in_outputType) {
     let matchedServices = [];
     let requests = [];
+
+    const clone = require('clone');
 
     let serviceKeys = Object.keys(g_SERVICE_REGISTRY);
     serviceKeys.forEach((serviceKey) => {
@@ -114,6 +157,8 @@ function getServices (in_inputTypes, in_outputType) {
 
 function _convertServicesRegistry (in_serviceRegistry) {
     let fn = '_convertServicesRegistry';
+
+    const clone = require('clone');
 
     let convertedServicesRegistry = [];
 
@@ -200,7 +245,7 @@ function _matchService (in_service, in_inputTypes, in_outputType) {
 
     return new Promise((resolve) => {
 
-        if (_serviceDisabled(in_service)) {
+        if (_servicePaused(in_service)) {
             resolve(false);
             return;
         }
@@ -236,7 +281,7 @@ function _matchService (in_service, in_inputTypes, in_outputType) {
 
 // ******************************
 
-function _serviceDisabled (in_service) {
+function _servicePaused (in_service) {
     if (!utils.getProperty(in_service, 'enabled', true)) {
         return true;
     }
@@ -246,12 +291,17 @@ function _serviceDisabled (in_service) {
     let serviceKey = utils.getProperty(in_service, 'key', false);
     if (g_DISABLE_SERVICES[serviceKey]) {
         let disabledServiceData = g_DISABLE_SERVICES[serviceKey];
+        if (disabledServiceData.ignore) {
+            return true;
+        }
+
         if (disabledServiceData.expiry < now) {
             delete g_DISABLE_SERVICES[serviceKey];
-        } else {
-            if (disabledServiceData.disabled === true) {
-                return true;
-            }
+            return;
+        }
+
+        if (disabledServiceData.paused === true) {
+            return true;
         }
     }
 
@@ -371,6 +421,7 @@ function _canConnect (in_service) {
     let responseData = {};
 
     let promise = new Promise((resolve) => {
+        const request = require('request');
         request(requestOptions, (error, response, body) => {
             log.verbose('Request Options: ' + utils.keyValToString(requestOptions));
             log.verbose('Response Error: ' + error);
@@ -434,8 +485,11 @@ function getServiceStats () {
 module.exports['addServiceStats'] = addServiceStats;
 module.exports['clearRegistryChanged'] = clearRegistryChanged;
 module.exports['clearServiceStats'] = clearServiceStats;
-module.exports['clearDisabledServices'] = clearDisabledServices;
-module.exports['disableService'] = disableService;
+module.exports['clearPausedServices'] = clearPausedServices;
+module.exports['clearIgnoredServices'] = clearIgnoredServices;
+module.exports['clearAllDisabledServices'] = clearAllDisabledServices;
+module.exports['pauseService'] = pauseService;
+module.exports['ignoreService'] = ignoreService;
 module.exports['getFunction'] = getFunction;
 module.exports['getService'] = getService;
 module.exports['getServices'] = getServices;

@@ -12,13 +12,14 @@
 // Requires:
 // ******************************
 
-let cprint = require('color-print');
-let print = require('./print');
+const cprint = require('color-print');
+const print = require('./print');
 
 // ******************************
 // Constants:
 // ******************************
 
+const k_LOG_LEVEL_NONE = 0;
 const k_LOG_LEVEL_ERROR = 1;
 const k_LOG_LEVEL_WARNING = 2;
 const k_LOG_LEVEL_SUCCESS = 3;
@@ -143,6 +144,7 @@ function _formatLogMessage (in_message) {
 // Exports:
 // ******************************
 
+module.exports['k_LOG_LEVEL_NONE'] = k_LOG_LEVEL_NONE;
 module.exports['k_LOG_LEVEL_ERROR'] = k_LOG_LEVEL_ERROR;
 module.exports['k_LOG_LEVEL_WARNING'] = k_LOG_LEVEL_WARNING;
 module.exports['k_LOG_LEVEL_SUCCESS'] = k_LOG_LEVEL_SUCCESS;

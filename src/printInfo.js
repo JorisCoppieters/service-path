@@ -12,12 +12,12 @@
 // Requires:
 // ******************************
 
-let cprint = require('color-print');
+const cprint = require('color-print');
 
-let paths = require('./paths');
-let print = require('./print');
-let registry = require('./registry');
-let utils = require('./utils');
+const paths = require('./paths');
+const print = require('./print');
+const registry = require('./registry');
+const utils = require('./utils');
 
 // ******************************
 // Functions:

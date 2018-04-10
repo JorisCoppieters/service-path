@@ -12,18 +12,15 @@
 // Requires:
 // ******************************
 
-let clone = require('clone');
-let Promise = require('bluebird');
-let qs = require('querystring');
-let request = require('request');
-let cprint = require('color-print');
+const Promise = require('bluebird');
+const cprint = require('color-print');
 
-let log = require('./log');
-let paths = require('./paths');
-let print = require('./print');
-let registry = require('./registry');
-let timer = require('./timer');
-let utils = require('./utils');
+const log = require('./log');
+const paths = require('./paths');
+const print = require('./print');
+const registry = require('./registry');
+const timer = require('./timer');
+const utils = require('./utils');
 
 // ******************************
 // Globals:
@@ -53,10 +50,12 @@ function getAndExecuteServicePath (in_inputs, in_outputType, in_maxTryCount, in_
                     // paths.clearServicePathsUsed();
 
                     log.warning('Trying again...');
-                    inputs = _cleanInputs(in_inputs);
+                    inputs = _cleanInputs(result);
                     servicePath = yield paths.getServicePath(Object.keys(inputs), in_outputType);
                     result = yield executeServicePath(servicePath, inputs);
                 }
+
+                registry.clearIgnoredServices();
 
                 let outputValue = (result ? utils.getValue(result[in_outputType]) : null);
 
@@ -75,6 +74,7 @@ function getAndExecuteServicePath (in_inputs, in_outputType, in_maxTryCount, in_
 // ******************************
 
 function executeServicePath (in_servicePath, in_inputs) {
+    const clone = require('clone');
     let allData = clone(_cleanInputs(in_inputs));
     return _executeServicePathNode(in_servicePath.reverse(), allData).then(() => {
         print.clearLine();
@@ -128,6 +128,8 @@ function loadTestServicePath (in_inputs, in_outputType, in_rate, in_duration, in
     let totalResonseTime = 0;
     let seenLast = false;
 
+    const clone = require('clone');
+
     if (in_startCb) {
         in_startCb(in_rate, in_duration);
     }
@@ -135,7 +137,7 @@ function loadTestServicePath (in_inputs, in_outputType, in_rate, in_duration, in
     let doFn = (last) => {
         let startDate = new Date();
         let inputs = _cleanInputs(in_inputs);
-        registry.clearDisabledServices();
+        registry.clearAllDisabledServices();
         paths.getServicePath(Object.keys(inputs), in_outputType).then((servicePath) => {
             _executeServicePathNode(clone(servicePath).reverse(), clone(inputs)).then((result) => {
                 if (!last && seenLast) {
@@ -245,19 +247,26 @@ function _executeServiceAndPopulateInputs (in_servicePath, in_servicePathNode, i
             let serviceName = utils.getProperty(in_servicePathNode, 'name');
             let servicePathNodeKey = utils.getProperty(in_servicePathNode, 'key');
             let serviceOutputType = utils.getProperty(in_servicePathNode, 'output');
+            let serviceType = utils.getProperty(in_servicePathNode, 'type', false);
 
             let error = utils.getProperty(outputValue, 'error', false);
             let warning = utils.getProperty(outputValue, 'warning', false);
+            let remove = utils.getProperty(outputValue, 'remove', false);
+
+            if (remove && serviceType === 'function') {
+                registry.ignoreService(servicePathNodeKey);
+                return resolve();
+            }
 
             if (error) {
                 log.error(serviceName + ': ' + error);
-                registry.disableService(servicePathNodeKey);
+                registry.pauseService(servicePathNodeKey);
                 return resolve();
             }
 
             if (warning) {
                 log.warning(serviceName + ': ' + warning);
-                registry.disableService(servicePathNodeKey);
+                registry.pauseService(servicePathNodeKey);
                 return resolve();
             }
 
@@ -376,6 +385,7 @@ function _executeNetworkService (in_service, in_inputs) {
                 agent: false
             };
         } else {
+            const qs = require('querystring');
             requestOptions = {
                 uri: requestUrl + '?' + qs.stringify(requestData),
                 method: 'GET',
@@ -391,6 +401,8 @@ function _executeNetworkService (in_service, in_inputs) {
         let serviceResult = {};
 
         timer.start(serviceAddress);
+
+        const request = require('request');
 
         request(requestOptions, (error, response, body) => {
             let responseTime = timer.stop(serviceAddress);
@@ -494,8 +506,9 @@ function _executeFunctionService (in_service, in_inputs) {
 
         serviceResultPromise.then((serviceResult) => {
             if (serviceResult === null) {
-                serviceResult = { warning: 'returned null' };
-                registry.addServiceStats({ service_key: serviceKey, warning: 'returned null' });
+                serviceResult = { remove: true };
+                // serviceResult = { warning: 'returned null' };
+                // registry.addServiceStats({ service_key: serviceKey, warning: 'returned null' });
             } else {
                 registry.addServiceStats({ service_key: serviceKey, response_time: timer.stop(serviceFunctionName) });
             }

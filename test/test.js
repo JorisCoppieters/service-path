@@ -4,14 +4,13 @@
 // Requires:
 // ******************************
 
-let servicePath = require('../index');
-let minimist = require('minimist');
+const servicePath = require('../index');
 
 // ******************************
 // Globals:
 // ******************************
 
-let g_ARGV = minimist(process.argv.slice(2));
+let g_ARGV = require('minimist')(process.argv.slice(2));
 let stats = g_ARGV['stats'];
 
 // ******************************
@@ -38,9 +37,6 @@ Object.keys(g_ARGV).forEach(key => {
     inputs[key] = g_ARGV[key];
 });
 
-servicePath.clearServiceStats();
-servicePath.clearServicePathsUsed();
-servicePath.clearDisabledServices();
 servicePath.getAndExecuteServicePath(inputs, outputType, 1).then(output => {
     printLine(output);
     if (stats) {
