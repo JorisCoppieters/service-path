@@ -218,14 +218,25 @@ function _executeServicePathNode (in_servicePath, in_availableInputs, in_lastOut
 
     Object.keys(servicePath).forEach((servicePathKey) => {
         let servicePathNode = servicePath[servicePathKey];
-        if (!registry.matchServiceInputTypes(servicePathNode, Object.keys(availableInputs))) {
+        if (!registry.matchServiceInputTypes(servicePathNode, Object.keys(availableInputs), true)) {
             return;
         }
 
         delete servicePath[servicePathKey];
-
         servicePathNodeRequests.push(_executeServiceAndPopulateInputs(servicePath, servicePathNode, availableInputs));
     });
+
+    // if (!servicePathNodeRequests.length) {
+    //     Object.keys(servicePath).forEach((servicePathKey) => {
+    //         let servicePathNode = servicePath[servicePathKey];
+    //         if (!registry.matchServiceInputTypes(servicePathNode, Object.keys(availableInputs))) {
+    //             return;
+    //         }
+
+    //         delete servicePath[servicePathKey];
+    //         servicePathNodeRequests.push(_executeServiceAndPopulateInputs(servicePath, servicePathNode, availableInputs));
+    //     });
+    // }
 
     return Promise.all(servicePathNodeRequests)
         .then(() => {
@@ -240,7 +251,7 @@ function _executeServiceAndPopulateInputs (in_servicePath, in_servicePathNode, i
 
     return new Promise((resolve, reject) => {
         _executeService(in_servicePathNode, availableInputs).then((outputValue) => {
-            if (!outputValue) {
+            if (utils.isNullOrUndefined(outputValue)) {
                 return resolve();
             }
 
@@ -270,7 +281,7 @@ function _executeServiceAndPopulateInputs (in_servicePath, in_servicePathNode, i
                 return resolve();
             }
 
-            if (!availableInputs[serviceOutputType] && outputValue) {
+            if (utils.isNullOrUndefined(availableInputs[serviceOutputType])) {
                 availableInputs[serviceOutputType] = outputValue;
             }
 

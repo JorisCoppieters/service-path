@@ -84,6 +84,18 @@ function isPromise (in_value) {
 
 // ******************************
 
+function isUndefined (in_value) {
+    return typeof(in_value) === 'undefined';
+}
+
+// ******************************
+
+function isNullOrUndefined (in_value) {
+    return isUndefined(in_value) || in_value === null;
+}
+
+// ******************************
+
 function keyValToString (in_inputs) {
     let keyVals = Object.keys(in_inputs).map((key) => {
         let val = in_inputs[key] || 'NULL';
@@ -172,6 +184,8 @@ module.exports['getProperty'] = getProperty;
 module.exports['getResponseKeyBody'] = getResponseKeyBody;
 module.exports['getValue'] = getValue;
 module.exports['isPromise'] = isPromise;
+module.exports['isUndefined'] = isUndefined;
+module.exports['isNullOrUndefined'] = isNullOrUndefined;
 module.exports['keyValToString'] = keyValToString;
 module.exports['toShortString'] = toShortString;
 module.exports['runGenerator'] = runGenerator;

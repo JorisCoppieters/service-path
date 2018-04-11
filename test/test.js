@@ -24,8 +24,8 @@ servicePath.setup({
 });
 
 let outputType = g_ARGV['output'] || 'ascii';
+let inputs = {};
 
-let inputs = [];
 Object.keys(g_ARGV).forEach(key => {
     if (typeof(g_ARGV[key]) === 'undefined' || g_ARGV[key] === null) {
         return;

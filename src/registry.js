@@ -186,6 +186,7 @@ function _convertServicesRegistry (in_serviceRegistry) {
             }
 
             service['input'] = service['input'] || service['inputs'];
+            delete service['inputs'];
 
             convertedServicesRegistry[serviceKey] = service;
         });
@@ -310,9 +311,13 @@ function _servicePaused (in_service) {
 
 // ******************************
 
-function matchServiceInputTypes (in_service, in_inputTypes) {
+function matchServiceInputTypes (in_service, in_inputTypes, in_requireOptionalInputs) {
     let serviceInputTypes = utils.toArray(utils.getProperty(in_service, 'input', []));
-    serviceInputTypes = serviceInputTypes.filter((serviceInputType) => { return !serviceInputType.match(/\?$/); });
+    if (in_requireOptionalInputs) {
+        serviceInputTypes = serviceInputTypes.map(serviceInputType => serviceInputType.replace(/\?$/, ''));
+    } else {
+        serviceInputTypes = serviceInputTypes.filter(serviceInputType => { return !serviceInputType.match(/\?$/); });
+    }
 
     let availableInputTypes = utils.toArray(in_inputTypes);
     let result = utils.arrayContainedIn(serviceInputTypes, availableInputTypes);

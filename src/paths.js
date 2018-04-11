@@ -44,7 +44,6 @@ function getServicePath (in_inputTypes, in_outputType) {
         availableInputs: in_inputTypes.slice(),
         distances,
         bestServices: [],
-        seen: [],
         newInputs: true
     };
 
@@ -69,17 +68,25 @@ function getServicePath (in_inputTypes, in_outputType) {
                     continue;
                 }
 
-                if (outputType.match(/\?$/)) {
-                    continue;
-                }
-
                 let outputService = bestServices[outputType];
                 if (!outputService) {
                     log.warning('Not best service for: ' + outputType);
                     break;
                 }
 
-                let serviceInputTypes = utils.toArray(utils.getProperty(outputService, 'input', []));
+                let serviceInputTypes = utils.toArray(utils.getProperty(outputService, 'input', []))
+                    .map(serviceInputType => {
+                        if (!serviceInputType.match(/\?$/)) {
+                            return serviceInputType;
+                        }
+                        serviceInputType = serviceInputType.replace(/\?$/, '');
+                        if (serviceDistanceInfo.availableInputs.indexOf(serviceInputType) >= 0 || !!bestServices[serviceInputType]) {
+                            return serviceInputType;
+                        }
+                        return 'NULL';
+                    });
+
+                outputService['input'] = serviceInputTypes;
 
                 if (servicePath.indexOf(outputService) >= 0) {
                     delete servicePath[servicePath.indexOf(outputService)];
@@ -126,7 +133,6 @@ function _calculateServiceDistances (in_serviceDistanceInfo) {
     let availableInputs = in_serviceDistanceInfo.availableInputs;
     let distances = in_serviceDistanceInfo.distances;
     let bestServices = in_serviceDistanceInfo.bestServices;
-    let seen = in_serviceDistanceInfo.seen;
 
     return new Promise((resolve, reject) => {
         registry.getServices(availableInputs).then((servicesWithInput) => {
@@ -140,20 +146,8 @@ function _calculateServiceDistances (in_serviceDistanceInfo) {
             });
 
             servicesWithInput.forEach((serviceWithInput) => {
-                let serviceName = utils.getProperty(serviceWithInput, 'name');
                 let serviceInputTypes = utils.toArray(utils.getProperty(serviceWithInput, 'input', []));
                 let serviceOutputType = utils.getProperty(serviceWithInput, 'output');
-
-                if (seen[serviceName]) {
-                    return;
-                }
-
-                seen[serviceName] = true;
-
-                if (availableInputs.indexOf(serviceOutputType) < 0) {
-                    availableInputs.push(serviceOutputType);
-                    in_serviceDistanceInfo.newInputs = true;
-                }
 
                 let serviceDistance = _getServiceDistance(serviceWithInput);
 
@@ -163,7 +157,9 @@ function _calculateServiceDistances (in_serviceDistanceInfo) {
                 let altDistance = parseInt(serviceDistance);
 
                 if (!in_serviceDistanceInfo.newInputs) {
-                    serviceInputTypes = serviceInputTypes.map((serviceInputType) => {
+                    // Final iteration of graph, lock down distances and filter out optional parameters
+
+                    serviceInputTypes = serviceInputTypes.map(serviceInputType => {
                         if (!serviceInputType.match(/\?$/)) {
                             return serviceInputType;
                         }
@@ -174,21 +170,24 @@ function _calculateServiceDistances (in_serviceDistanceInfo) {
                     });
 
                     serviceWithInput['input'] = serviceInputTypes;
+
+                    Object.values(serviceInputTypes).forEach(serviceInputType => {
+                        altDistance += distances[serviceInputType];
+                    });
+
+                } else {
+                    // Otherwise, if service contains optional inputs, mark it as unseen again
+                    Object.values(serviceInputTypes).forEach(serviceInputType => {
+                        altDistance += distances[serviceInputType.replace(/\?$/,'')];
+                    });
                 }
-
-                serviceInputTypes.forEach((serviceInputType) => {
-                    if (serviceInputType.match(/\?$/)) {
-                        seen[serviceName] = false;
-                    }
-
-                    altDistance += distances[serviceInputType];
-                });
 
                 log.verbose('  Found neighbour "' + serviceInputTypes.join('+') + '":"' + serviceOutputType + '" => ' + altDistance );
 
                 if (!isNaN(altDistance) && (isNaN(bestDistance) || altDistance < bestDistance)) {
                     distances[serviceOutputType] = altDistance;
                     bestServices[serviceOutputType] = serviceWithInput;
+                    in_serviceDistanceInfo.newInputs = true;
 
                     log.verbose('  Best distance so far "' + serviceOutputType + '" => ' + altDistance + ' < ' + bestDistance);
                 }
