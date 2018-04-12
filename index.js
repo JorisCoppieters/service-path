@@ -34,6 +34,10 @@ function setup (config) {
     log.setLogger(utils.getProperty(config, 'logger', false));
     log.setLogLevel(utils.getProperty(config, 'log_level', log.k_LOG_LEVEL_WARNING));
     log.setLogSingleLine(utils.getProperty(config, 'log_single_line', false));
+
+    registry.clearRegistry();
+    registry.clearFunctions();
+
     registry.setRegistry(utils.getProperty(config, 'service_registry', {}));
     registry.setFunctions(utils.getProperty(config, 'service_functions', {}));
 }

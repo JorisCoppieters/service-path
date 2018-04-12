@@ -46,8 +46,20 @@ function hasRegistryChanged () {
 
 // ******************************
 
+function clearRegistry () {
+    g_SERVICE_REGISTRY = {};
+}
+
+// ******************************
+
 function clearRegistryChanged () {
     g_REGISTRY_CHANGED = undefined;
+}
+
+// ******************************
+
+function clearFunctions () {
+    g_SERVICE_FUNCTIONS = {};
 }
 
 // ******************************
@@ -488,6 +500,8 @@ function getServiceStats () {
 // ******************************
 
 module.exports['addServiceStats'] = addServiceStats;
+module.exports['clearRegistry'] = clearRegistry;
+module.exports['clearFunctions'] = clearFunctions;
 module.exports['clearRegistryChanged'] = clearRegistryChanged;
 module.exports['clearServiceStats'] = clearServiceStats;
 module.exports['clearPausedServices'] = clearPausedServices;
