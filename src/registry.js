@@ -100,7 +100,7 @@ function clearPausedServices () {
             return disabledServiceData;
         })
         .filter(disabledServiceData => !disabledServiceData.paused)
-        .reduce((disabledServiceData, pausedServices) => {
+        .reduce((pausedServices, disabledServiceData) => {
             let serviceKey = disabledServiceData.serviceKey;
             delete disabledServiceData.serviceKey;
             pausedServices[serviceKey] = disabledServiceData;
@@ -118,7 +118,7 @@ function clearIgnoredServices () {
             return disabledServiceData;
         })
         .filter(disabledServiceData => !disabledServiceData.ignore)
-        .reduce((disabledServiceData, pausedServices) => {
+        .reduce((pausedServices, disabledServiceData) => {
             let serviceKey = disabledServiceData.serviceKey;
             delete disabledServiceData.serviceKey;
             pausedServices[serviceKey] = disabledServiceData;
