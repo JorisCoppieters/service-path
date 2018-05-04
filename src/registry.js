@@ -76,6 +76,24 @@ function getFunction (in_functionName) {
 
 // ******************************
 
+function getTypes () {
+    return Object.keys(g_SERVICE_REGISTRY)
+        .map(serviceKey => {
+            let service = g_SERVICE_REGISTRY[serviceKey];
+            let serviceInputTypes = utils.toArray(utils.getProperty(service, 'input', []));
+            let serviceOutputType = utils.getProperty(service, 'output');
+            return serviceInputTypes.concat([serviceOutputType]);
+        })
+        .reduce((a, b) => a.concat(b), [])
+        .map(a => a.replace(/\?$/, ''))
+        .reduce((a, b) => (a.indexOf(b) >= 0)? a : a.concat(b), [])
+        .filter(a => a !== 'NULL')
+        .filter(a => !a.match(/^.*==.*$/))
+        .sort();
+}
+
+// ******************************
+
 function pauseService (in_serviceKey) {
     let now = new Date().getTime();
 
@@ -500,22 +518,23 @@ function getServiceStats () {
 // ******************************
 
 module.exports['addServiceStats'] = addServiceStats;
-module.exports['clearRegistry'] = clearRegistry;
+module.exports['clearAllDisabledServices'] = clearAllDisabledServices;
 module.exports['clearFunctions'] = clearFunctions;
+module.exports['clearIgnoredServices'] = clearIgnoredServices;
+module.exports['clearPausedServices'] = clearPausedServices;
+module.exports['clearRegistry'] = clearRegistry;
 module.exports['clearRegistryChanged'] = clearRegistryChanged;
 module.exports['clearServiceStats'] = clearServiceStats;
-module.exports['clearPausedServices'] = clearPausedServices;
-module.exports['clearIgnoredServices'] = clearIgnoredServices;
-module.exports['clearAllDisabledServices'] = clearAllDisabledServices;
-module.exports['pauseService'] = pauseService;
-module.exports['ignoreService'] = ignoreService;
 module.exports['getFunction'] = getFunction;
 module.exports['getService'] = getService;
-module.exports['getServices'] = getServices;
 module.exports['getServiceStats'] = getServiceStats;
+module.exports['getServices'] = getServices;
+module.exports['getTypes'] = getTypes;
 module.exports['hasRegistryChanged'] = hasRegistryChanged;
+module.exports['ignoreService'] = ignoreService;
 module.exports['matchServiceInputTypes'] = matchServiceInputTypes;
 module.exports['matchServiceOutputType'] = matchServiceOutputType;
+module.exports['pauseService'] = pauseService;
 module.exports['setFunctions'] = setFunctions;
 module.exports['setRegistry'] = setRegistry;
 
