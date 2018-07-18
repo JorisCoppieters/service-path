@@ -389,6 +389,7 @@ function _executeNetworkService (in_service, in_inputs) {
                 uri: requestUrl,
                 method: 'POST',
                 json: requestData,
+                followAllRedirects: true,
                 timeout: serviceTimeout,
                 headers: serviceRequestHeaders,
                 rejectUnauthorized: false,
@@ -400,8 +401,9 @@ function _executeNetworkService (in_service, in_inputs) {
             requestOptions = {
                 uri: requestUrl + '?' + qs.stringify(requestData),
                 method: 'GET',
-                timeout: serviceTimeout,
                 json: true,
+                followAllRedirects: true,
+                timeout: serviceTimeout,
                 headers: serviceRequestHeaders,
                 rejectUnauthorized: false,
                 requestCert: true,
