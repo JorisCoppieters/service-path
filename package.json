@@ -22,6 +22,10 @@
     "color-print": "^1.0.2",
     "minimist": "^1.2.0",
     "qs": "^6.5.2",
+<<<<<<< HEAD
     "request": "^2.88.0"
+=======
+    "request": "^2.87.0"
+>>>>>>> a5e89e27ad1935fba37a72c5afd730b51ce9ffc1
   }
 }

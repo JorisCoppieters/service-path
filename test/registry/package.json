@@ -3,8 +3,13 @@
   "main": "server.js",
   "version": "",
   "dependencies": {
+<<<<<<< HEAD
     "asciify-image": "^0.1.3",
     "request": "^2.88.0"
+=======
+    "asciify-image": "^0.1.1",
+    "request": "^2.87.0"
+>>>>>>> a5e89e27ad1935fba37a72c5afd730b51ce9ffc1
   },
   "scripts": {}
 }
