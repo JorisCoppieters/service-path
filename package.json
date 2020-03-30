@@ -20,7 +20,7 @@
     "bluebird": "^3.5.2",
     "clone": "^2.1.2",
     "color-print": "^1.0.2",
-    "minimist": "^1.2.0",
+    "minimist": "^1.2.2",
     "qs": "^6.5.2",
     "request": "^2.88.0"
   }
